@@ -13,6 +13,7 @@ library(rgl)
 library(ggpubr)
 library(rlas)
 library(tiff)
+library(ForestTools)
 
 ## Setting working directory
 setwd("/Users/marariza/Downloads")
@@ -43,23 +44,23 @@ DSM_proj <- projectRaster(DSM_no_proj, crs = crs(DTM1))
 DSM <- resample(DSM_proj, DTM1, method = "bilinear")
 
 # We compute the CHM substracting also 40.68, which is the difference height between the DSM and the DTM
-# in the area on the left (U-shaped area).  
+# in the area on the left (U-shaped area).
 CHM <- DSM - DTM1 - 40.68
-plot(CHM, main="CHM", col=matlab.like2(50))
+plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 
 ##########################################################################################################
 
-plot(ground)
-rground <- (grid_metrics(ground, res=1, mean(Z)))
-plot(rground, col=matlab.like2(50))
-minHeight = grid_metrics(AHN3_clip, res=1, min(Z)) 
-maxHeight = grid_metrics(AHN3_clip, res=1, max(Z))
-plot(maxHeight, main="Maximum Height (m)", col=matlab.like2(50))
-plot(minHeight, main="Minimum Height (m)", col=matlab.like2(50))
-rHeightdiff <- maxHeight - minHeight 
-plot(rHeightdiff, main="Object Height", col=matlab.like2(50))
-DTM <- grid_terrain(AHN3_clip, res=1, algorithm = knnidw(k=6L, p = 2), keep_lowest = FALSE) 
-plot(DTM, main="DTM", col=matlab.like2(50))
-CHM<-grid_canopy(AHN3_clip, res=1, p2r(0.2))
-plot(CHM, main="CHM", col=matlab.like2(50))
+
+# We use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
+# forestry and set the minimum height of trees at 10, but those variables can be modified. 
+# After we plot it to check how the tree tops look like. 
+lin <- function(x) {x*0.05+0.6}
+treetops <- vwf(CHM = CHM, winFun = lin, minHeight = 10)
+plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
+plot(treetops, col="black", pch = 20, cex=0.5, add=TRUE)
+
+# We check the mean of the height of the detected tree tops 
+mean(treetops$height)
+
+
 
