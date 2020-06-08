@@ -17,7 +17,7 @@ library(rlas)
 setwd("/Users/marariza/Downloads")
 
 # Loading the downloaded datasets (32fn2 from AHN3)
-AHN3_laz <- "C_32FN2.laz"
+AHN3_laz <- "Data/C_32FN2.laz"
 AHN3 <- catalog(AHN3_laz)
 
 # Checking the current extent
@@ -40,6 +40,21 @@ rgl.close()
 # Save the clipped AHN3 for future use
 writeLAS(AHN3_clip, "AHN3.laz")
 writeLAS(AHN3_clip, "AHN3.las")
+
+# Select area with beech forest and save it in separate files
+ahn3laz <- "/Users/HP/Documents/ACT/R/Data/AHN3.laz"
+AHN3 <- readLAS(ahn3laz)
+AHN3_beech <- lasclipRectangle(AHN3, 176170, 473657, 176265, 473782)
+#plot(AHN_beech)
+writeLAS(AHN3_beech, "/Users/HP/Documents/ACT/R/Data/AHN3_beech.laz")
+writeLAS(AHN3_beech, "/Users/HP/Documents/ACT/R/Data/AHN3_beech.las")
+
+# Select area with Douglas Fir forest and save it in separate files
+AHN3_fir <- lasclipRectangle(AHN3, 176040, 473657, 176100, 473710)
+#plot(AHN3_fir)
+writeLAS(AHN3_fir, "/Users/HP/Documents/ACT/R/Data/AHN3_fir.laz")
+writeLAS(AHN3_fir, "/Users/HP/Documents/ACT/R/Data/AHN3_fir.las")
+
 
 ######################################################################################################
 
