@@ -14,6 +14,9 @@ library(ggpubr)
 library(rlas)
 library(tiff)
 library(ForestTools)
+library(itcSegment)
+library(TreeLS)
+
 
 ## Setting working directory
 setwd("/Users/marariza/Downloads")
@@ -38,7 +41,7 @@ plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 # We use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After we plot it to check how the tree tops look like. 
-lin <- function(x) {x*0.05+0.6}
+lin <- function(x) {x*0.01+2}
 treetops <- vwf(CHM = CHM, winFun = lin, minHeight = 15)
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(treetops, col="black", pch = 20, cex=0.5, add=TRUE)
@@ -66,5 +69,21 @@ mean(crownsPoly$crownArea)
 
 sp_summarise(treetops)
 sp_summarise(crownsPoly, variables=c("crownArea", "height"))
+
+#####################################################################################################
+
+segmentation <- dalponte2016(chm=CHM, treetops = treetops, th_seed = 0.2,th_cr = 0.2)()
+plot(segmentation)
+
+
+nlas <- lasnormalize(AHN3, DTM)
+plot(nlas)
+DBH_slice <-  nlas %>% lasfilter(Z>1 & Z<4.5) ## slice around Breast height 
+plot(DBH_slice, color="Classification")
+
+stem_segm <- sgmt.ransac.circle(conf=0.99,inliers = 0.7,n=10, tol=0.025)
+
+
+
 
 
