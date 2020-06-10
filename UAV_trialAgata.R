@@ -80,7 +80,7 @@ sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
 # Point density
 density <- grid_density(beechLas, res=1)
-plot(density)
+#plot(density)
 
 # Normalize las to correct the height of all points for the terrain height
 nlas <- lasnormalize(beechLas, DTM)
@@ -99,22 +99,13 @@ trees <- lastrees(Vegpoints_norm, dalponte2016(CHM, treetops))
 plot(trees, color="treeID") 
 
 # Li 
-trees <- lastrees(Vegpoints_norm, li2012(R=5, speed_up=10, hmin=5))  
+#trees <- lastrees(Vegpoints_norm, li2012(R=5, speed_up=10, hmin=5))  
 
-# ...
-stem_segm <- sgmt.ransac.circle(conf=0.99,inliers = 0.7,n=10, tol=0.025)
-
-
-chm <- raster::focal(chm, w = ker, fun = mean, na.rm = TRUE)
-
-tree_map <- treeMap(nlas, method=map.hough())
-stem_points <- stemPoints(nlas, map=tree_map, method=stem.hough())
-stem_segm <- stemSegmentation(stem_points, sgmt.ransac.circle(conf=0.99,inliers = 0.7,n=10, tol=0.025))
-
-
-
-
-
-
-
-
+tls = tlsNormalize(beechLas)
+# map the trees on a resampled point cloud so all trees have approximately the same point density
+thin = tlsSample(tls, voxelize(0.02))
+map = treeMap(thin, map.hough(min_density = 0.01))
+tls = stemPoints(tls, map)
+df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
+head(df)
+tlsPlot(tls, df, map)
