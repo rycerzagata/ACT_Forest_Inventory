@@ -72,17 +72,6 @@ sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
 #####################################################################################################
 
-segmentation <- dalponte2016(chm=CHM, treetops = treetops, th_seed = 0.2,th_cr = 0.2)()
-plot(segmentation)
-
-
-nlas <- lasnormalize(AHN3, DTM)
-plot(nlas)
-DBH_slice <-  nlas %>% lasfilter(Z>1 & Z<4.5) ## slice around Breast height 
-plot(DBH_slice, color="Classification")
-
-stem_segm <- sgmt.ransac.circle(conf=0.99,inliers = 0.7,n=10, tol=0.025)
-
 
 
 
