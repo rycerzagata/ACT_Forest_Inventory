@@ -103,9 +103,10 @@ plot(trees, color="treeID")
 
 tls = tlsNormalize(beechLas)
 # map the trees on a resampled point cloud so all trees have approximately the same point density
-thin = tlsSample(tls, voxelize(0.02))
-map = treeMap(thin, map.hough(min_density = 0.01))
+thin = tlsSample(tls, voxelize(0.01))
+map = treeMap(thin, map.hough(hmin = 1, hmax = 2, max_radius = 0.3, min_density = 0.01, min_votes = 2))
 tls = stemPoints(tls, map)
 df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
 head(df)
 tlsPlot(tls, df, map)
+
