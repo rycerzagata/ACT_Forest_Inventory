@@ -19,24 +19,30 @@ library(TreeLS)
 
 
 ## Setting working directory
-setwd("/Users/marariza/Downloads")
+#setwd("/Users/marariza/Downloads")
 
 # We load and read the AHN3 file
-AHN3_clip <- "AHN3.laz"
+AHN3_clip <- "/Users/HP/Documents/ACT/R/Data/AHN3_beech.laz"
 AHN3 <- readLAS(AHN3_clip)
 
+lasfile <- "/Users/HP/Documents/ACT/R/Data/UAV_withGround.laz"
+beechLas <- readLAS(lasfile)
+beechLas <- lasclipRectangle(beechLas, 176170, 473657, 176265, 473782)
+
 # Computing the DSM with the AHN3 dataset
-DSM<-grid_canopy(AHN3, res=1, p2r(0.2))
-plot(DSM, main="DSM", col=matlab.like2(50))
+DSM <- grid_canopy(beechLas, res=1, p2r(0.2))
+#plot(DSM, main="DSM", col=matlab.like2(50))
 
 # Computing the DTM with the AHN3 dataset
 DTM <- grid_terrain(AHN3, res=1, algorithm = knnidw(k=6L, p = 2), keep_lowest = FALSE)
-plot(DTM, main="DTM", col=matlab.like2(50))
+#plot(DTM, main="DTM", col=matlab.like2(50))
 
 # We compute the CHM and remove one value which is below 0 (-0.005 m)
 CHM <- DSM - DTM
-CHM[CHM<0] <- NA
-plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
+CHM[is.na(CHM)] <- 0
+
+# Using focal statistics to smooth the CHM
+CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
 
 # We use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
@@ -72,5 +78,35 @@ sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
 #####################################################################################################
 
+# Point density
+density <- grid_density(beechLas, res=1)
+#plot(density)
 
+# Normalize las to correct the height of all points for the terrain height
+nlas <- lasnormalize(beechLas, DTM)
+plot(nlas)
+
+# Select stems/crowns segment
+DBH_slice <-  nlas %>% lasfilter(Z>0.8 & Z<2) ## slice around Breast height 
+Crowns_slice <-  nlas %>% lasfilter(Z>10)
+plot(DBH_slice, color="Classification")
+
+#### INDIVIDUAL TREE SEGMENTATION ####
+# Select all vegetation and other objects
+Vegpoints_norm <- nlas %>% lasfilter(Classification==1) 
+# Dalponte
+trees <- lastrees(Vegpoints_norm, dalponte2016(CHM, treetops))
+plot(trees, color="treeID") 
+
+# Li 
+#trees <- lastrees(Vegpoints_norm, li2012(R=5, speed_up=10, hmin=5))  
+
+tls = tlsNormalize(beechLas)
+# map the trees on a resampled point cloud so all trees have approximately the same point density
+thin = tlsSample(tls, voxelize(0.01))
+map = treeMap(thin, map.hough(hmin = 1, hmax = 2, max_radius = 0.3, min_density = 0.01, min_votes = 2))
+tls = stemPoints(tls, map)
+df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
+head(df)
+tlsPlot(tls, df, map)
 

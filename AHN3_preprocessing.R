@@ -51,7 +51,7 @@ writeLAS(AHN3_beech, "/Users/HP/Documents/ACT/R/Data/AHN3_beech.las")
 
 # Select area with Douglas Fir forest and save it in separate files
 AHN3_fir <- lasclipRectangle(AHN3, 176040, 473657, 176100, 473710)
-#plot(AHN3_fir)
+# plot(AHN3_fir)
 writeLAS(AHN3_fir, "/Users/HP/Documents/ACT/R/Data/AHN3_fir.laz")
 writeLAS(AHN3_fir, "/Users/HP/Documents/ACT/R/Data/AHN3_fir.las")
 
