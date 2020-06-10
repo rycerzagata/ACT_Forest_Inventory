@@ -12,6 +12,9 @@ library(ggpubr)
 library(rlas)
 library(tiff)
 library(ForestTools)
+library(itcSegment)
+library(TreeLS)
+
 ## Setting working directory
 setwd("/Users/marariza/Downloads")
 
@@ -41,39 +44,33 @@ DSM<-grid_canopy(UAV_beech, res=1, p2r(0.2))
 #OBJECT Height
 CHM <- DSM - DTM
 
-#Remove negetative data
-CHM[CHM<0] <- NA
+#Remove NA values
+CHM[is.na(CHM)] <- 0
 
 # Using focal statistics to smooth the CHM
-CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), fun=mean, na.rm=TRUE)
-calc(CHM_smooth, function(x) {x*10})
-
-
-par(mfrow=c(1,2))
-plot(CHM, main="Regular")
-plot(CHM_smooth, main="Smooth by 3")
-
+CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
+plot(CHM_smooth)
 
 # We use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After we plot it to check how the tree tops look like. 
-lin <- function(x) {x*0.09+2}
+lin <- function(x) {x*0.15+4}
 treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 15)
 
-plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
+plot(CHM_smooth, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(treetops, col="black", pch = 20, cex=0.5, add=TRUE)
 
 # We compute the function MCWS function that implements the watershed algorithm. In this case, the argument
 # minHeight refers to the lowest expected treetop. The result is a raster where each tree crown is 
 # a unique cell value. 
-crowns <- mcws(treetops = treetops, CHM=CHM, minHeight = 15, verbose=FALSE)
+crowns <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 15, verbose=FALSE)
 plot(crowns, main="Detected tree crowns", col=sample(rainbow(50), length(unique(crowns[])),replace=TRUE), 
      legend=FALSE, xaxt="n", yaxt="n")
 
 # We do the same computation as before but changig the output format to polygons. It takes more processing
 # time but polygons inherit the attributes of treetops as height. Also, crown area is computed for each polygon.
-crownsPoly <- mcws(treetops = treetops, CHM=CHM, minHeight = 8, verbose=FALSE, format="polygons")
-plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
+crownsPoly <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 8, verbose=FALSE, format="polygons")
+plot(CHM_smooth, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
 # Assuming each crown has a roughly circular shape,the crown area is used to compute its average circular diameter.
@@ -97,14 +94,26 @@ nlas <- lasnormalize(UAV_beech, DTM)
 # Select stems/crowns segments
 DBH_slice <-  nlas %>% lasfilter(Z>0.8 & Z<1.5) ## slice around Breast height 
 crown_slice <- nlas %>% lasfilter(Z>10)
-plot(DBH_slice, color="Classification")
+#plot(DBH_slice, color="Classification")
 
 # Select all vegetation and other objects
 vegpoints_norm <- nlas %>% lasfilter(Classification==1)
 trees <- lastrees(vegpoints_norm, dalponte2016(CHM, treetops))
-plot(trees, color="treeID")
+#plot(trees, color="treeID")
+
+#trees2 <- lastrees(vegpoints_norm, li2012(R=0, speed_up = 4, hmin=15))
+#plot(trees2, color="treeID")
+
+#(max(trees@data$treeID, na.rm=TRUE))
+#(max(trees2@data$treeID, na.rm=TRUE))
 
 
+tree_map <- treeMap(nlas, method=map.hough())
+stem_points <- stemPoints(nlas, map=tree_map, method=stem.hough())
 
-stem_segm <- sgmt.ransac.circle(conf=0.99,inliers = 0.7,n=10, tol=0.025)
+stem_segm <- stemSegmentation(stem_points, sgmt.ransac.circle())
+
+nlas_class <- lasclassify(nlas, AHN3_beech)
+
+?stemSegmentation
 
