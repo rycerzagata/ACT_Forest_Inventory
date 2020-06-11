@@ -60,7 +60,7 @@ plot(CHM_smooth)
 # We use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After we plot it to check how the tree tops look like. 
-lin <- function(x) {x*0.15+4}
+lin <- function(x) {x*0.1+1}
 treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 15)
 
 plot(CHM_smooth, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
@@ -84,6 +84,7 @@ crownsPoly[["crownDiameter"]] <- sqrt(crownsPoly$crownArea/pi) *2
 mean(crownsPoly$crownDiameter)
 mean(crownsPoly$crownArea)
 
+# Make a summary of computed tree parameters
 sp_summarise(treetops)
 sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
