@@ -98,22 +98,25 @@ crown_slice <- nlas %>% lasfilter(Z>10)
 
 # Select all vegetation and other objects
 vegpoints_norm <- nlas %>% lasfilter(Classification==1)
-trees <- lastrees(vegpoints_norm, dalponte2016(CHM, treetops))
-#plot(trees, color="treeID")
-
-#trees2 <- lastrees(vegpoints_norm, li2012(R=0, speed_up = 4, hmin=15))
-#plot(trees2, color="treeID")
-
-#(max(trees@data$treeID, na.rm=TRUE))
-#(max(trees2@data$treeID, na.rm=TRUE))
+#trees <- lastrees(vegpoints_norm, dalponte2016(CHM, treetops))
 
 
-tree_map <- treeMap(nlas, method=map.hough())
-stem_points <- stemPoints(nlas, map=tree_map, method=stem.hough())
+trees2 <- lastrees(vegpoints_norm, silva2016(CHM_smooth, treetops, max_cr_factor = 0.8, exclusion = 0.1, ID = "treeID"))
+plot(trees2, color="treeID")
 
-stem_segm <- stemSegmentation(stem_points, sgmt.ransac.circle())
+(max(trees2@data$treeID, na.rm=TRUE))
 
-nlas_class <- lasclassify(nlas, AHN3_beech)
+tls = tlsNormalize(UAV_beech)
+# map the trees on a resampled point cloud so all trees have approximately the same point density
+thin = tlsSample(tls, voxelize(0.01))
+map = treeMap(thin, map.hough(hmin = 1, hmax = 2, max_radius = 0.3, min_density = 0.01, min_votes = 2))
+tls = stemPoints(tls, map)
+df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
+head(df)
+tlsPlot(tls, df, map)
 
-?stemSegmentation
+
+
+
+
 
