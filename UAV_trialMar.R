@@ -1,5 +1,11 @@
 
-##
+"""
+ACT group 10
+Remote Sensing and GIS Integration 2020
+Title: Forest Inventory through UAV based remote sensing
+Description: This script is made in order to create the CHM using Lidar data from UAV and AHN3 datasets. Derivates like treetops 
+and crown area are computed. The last part of the script is tree segmentation and circumference fitting using RANSAC algorithm.
+"""
 
 ## Determine which file to load: 
 
