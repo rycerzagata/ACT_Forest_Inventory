@@ -8,6 +8,7 @@ and crown area are computed. The last part of the script is tree segmentation an
 """
 
 # Loading the required libraries
+library(rLiDAR)
 library(lidR)
 library(raster)
 library(colorRamps)
@@ -17,11 +18,10 @@ library(ggpubr)
 library(rlas)
 library(tiff)
 library(ForestTools)
-library(itcSegment)
 library(TreeLS)
 library(EBImage)
-library(rLiDAR)
 
+readLAS<-lidR::readLAS
 #### CHM COMPUTATION ####
 ## Setting working directory
 #setwd("/Users/marariza/Downloads")
@@ -118,18 +118,22 @@ tlsPlot(tls, df, map)
 
 
 #### TREE SEGMENTATION - DALPONTE APPROACH ####
+
+# Treetops detection
 ttops <- tree_detection(CHM, lmf(4, 2))
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(ttops, col="black", pch = 20, cex=0.5, add=TRUE)
 
+# Crowns
 crowns <- mcws(treetops = ttops, CHM=CHM, minHeight = 15, verbose=FALSE)
-
 crownsPoly <- mcws(treetops = ttops, CHM=CHM, minHeight = 8, verbose=FALSE, format="polygons")
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
+# Calculate diameter of crowns and add to crown data
 crownsPoly[["crownDiameter"]] <- sqrt(crownsPoly$crownArea/pi) *2
 
+# Normalize the point cloud using DTM
 nlas <- lasnormalize(beechLas, DTM)
 Vegpoints_norm <- nlas %>% lasfilter(Classification==1) 
 trees <- lastrees(nlas, dalponte2016(CHM, ttops))
@@ -142,3 +146,6 @@ for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
   writeLAS(tree, paste("/Users/HP/Documents/ACT/R/Data/extracted_trees/tree", i, ".laz"))}
 
+file1 <- "/Users/HP/Documents/ACT/R/Data/extracted_trees/tree 101 .laz"
+tree <- readLAS(file1)
+plot(tree)
