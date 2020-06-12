@@ -1,7 +1,10 @@
+
 """
 ACT group 10
 Remote Sensing and GIS Integration 2020
 Title: Forest Inventory through UAV based remote sensing
+Description: This script is made in order to create the CHM using Lidar data from UAV and AHN3 datasets. Derivates like treetops 
+and crown area are computed. The last part of the script is tree segmentation and circumference fitting using RANSAC algorithm.
 """
 
 # Loading the required libraries
@@ -16,8 +19,10 @@ library(tiff)
 library(ForestTools)
 library(itcSegment)
 library(TreeLS)
+library(EBImage)
+library(rLiDAR)
 
-
+#### CHM COMPUTATION ####
 ## Setting working directory
 #setwd("/Users/marariza/Downloads")
 
@@ -42,13 +47,37 @@ CHM <- DSM - DTM
 CHM[is.na(CHM)] <- 0
 
 # Using focal statistics to smooth the CHM
-CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
+CHM <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
+
+#################################################
+############## Alternative way of smoothing CHM
+sCHM<-CHMsmoothing(CHM, ws=3)
+
+fws<-3 # dimention 3x3
+# Set the specified height above ground for the detection break
+minht<-15
+# Create the individual tree detection list and summarize it
+loc<-FindTreesCHM(sCHM, fws, minht)
+loc
+maxcrown=10.0
+# Set the exclusion parameter - A single value from 0 to 1 that represents the % of pixel
+# exclusion. E.g. a value of 0.5 will exclude all of the pixels for a single tree that has
+#a height value of less than 50% of the maximum height from the same tree. Default value is 0.3.
+exclusion=0.1
+# Compute canopy areas for the individual tree detections
+canopy<-ForestCAS(sCHM, loc, maxcrown, exclusion)
+boundaryTrees<-canopy[[1]]
+canopyList<-canopy[[2]]
+XY<-SpatialPoints(canopyList[,1:2])
+#################################################
+
+#### BASIC APPROACH - C CHM DERIVATES ####
 
 # We use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After we plot it to check how the tree tops look like. 
-lin <- function(x) {x*0.2 + 3}
-treetops <- vwf(CHM = CHM, winFun = lin, minHeight = 15)
+lin <- function(x) {x* 0.06 + 1}
+treetops <- vwf(CHM = CHM, winFun = lin, minHeight = 10)
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(treetops, col="black", pch = 20, cex=0.5, add=TRUE)
 
@@ -59,8 +88,8 @@ mean(treetops$height)
 # minHeight refers to the lowest expected treetop. The result is a raster where each tree crown is 
 # a unique cell value. 
 crowns <- mcws(treetops = treetops, CHM=CHM, minHeight = 15, verbose=FALSE)
-plot(crowns, main="Detected tree crowns", col=sample(rainbow(50), length(unique(crowns[])),replace=TRUE), 
-     legend=FALSE, xaxt="n", yaxt="n")
+#plot(crowns, main="Detected tree crowns", col=sample(rainbow(50), length(unique(crowns[])),replace=TRUE), 
+     #legend=FALSE, xaxt="n", yaxt="n")
 
 # We do the same computation as before but changig the output format to polygons. It takes more processing
 # time but polygons inherit the attributes of treetops as height. Also, crown area is computed for each polygon.
@@ -70,42 +99,46 @@ plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
 # Assuming each crown has a roughly circular shape,the crown area is used to compute its average circular diameter.
 crownsPoly[["crownDiameter"]] <- sqrt(crownsPoly$crownArea/pi) *2
-mean(crownsPoly$crownDiameter)
-mean(crownsPoly$crownArea)
+#mean(crownsPoly$crownDiameter)
+#mean(crownsPoly$crownArea)
 
 sp_summarise(treetops)
 sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
-#####################################################################################################
 
-# Point density
-density <- grid_density(beechLas, res=1)
-#plot(density)
-
-# Normalize las to correct the height of all points for the terrain height
-nlas <- lasnormalize(beechLas, DTM)
-plot(nlas)
-
-# Select stems/crowns segment
-DBH_slice <-  nlas %>% lasfilter(Z>0.8 & Z<2) ## slice around Breast height 
-Crowns_slice <-  nlas %>% lasfilter(Z>10)
-plot(DBH_slice, color="Classification")
-
-#### INDIVIDUAL TREE SEGMENTATION ####
-# Select all vegetation and other objects
-Vegpoints_norm <- nlas %>% lasfilter(Classification==1) 
-# Dalponte
-trees <- lastrees(Vegpoints_norm, dalponte2016(CHM, treetops))
-plot(trees, color="treeID") 
-
-# Li 
-#trees <- lastrees(Vegpoints_norm, li2012(R=5, speed_up=10, hmin=5))  
-
+#### STEM SEGMENTATION ####
 tls = tlsNormalize(beechLas)
 # map the trees on a resampled point cloud so all trees have approximately the same point density
 thin = tlsSample(tls, voxelize(0.01))
-map = treeMap(thin, map.hough(hmin = 1, hmax = 2, max_radius = 0.3, min_density = 0.01, min_votes = 2))
+map = treeMap(thin, map.hough(hmin = 1, hmax = 2, max_radius = 0.3, min_density = 0.1, min_votes = 2))
 tls = stemPoints(tls, map)
 df = stemSegmentation(tls, sgmt.ransac.circle(n=10))
 head(df)
 tlsPlot(tls, df, map)
+
+
+#### TREE SEGMENTATION - DALPONTE APPROACH ####
+ttops <- tree_detection(CHM, lmf(4, 2))
+plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
+plot(ttops, col="black", pch = 20, cex=0.5, add=TRUE)
+
+crowns <- mcws(treetops = ttops, CHM=CHM, minHeight = 15, verbose=FALSE)
+
+crownsPoly <- mcws(treetops = ttops, CHM=CHM, minHeight = 8, verbose=FALSE, format="polygons")
+plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
+plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
+
+crownsPoly[["crownDiameter"]] <- sqrt(crownsPoly$crownArea/pi) *2
+
+nlas <- lasnormalize(beechLas, DTM)
+Vegpoints_norm <- nlas %>% lasfilter(Classification==1) 
+trees <- lastrees(nlas, dalponte2016(CHM, ttops))
+plot(trees, color="treeID") 
+
+# We extract every tree into a different .laz file
+dir.create( "/Users/HP/Documents/ACT/R/Data/extracted_trees")
+for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
+  print(i)
+  tree <- trees %>% lasfilter(treeID==i, Classification==1)
+  writeLAS(tree, paste("/Users/HP/Documents/ACT/R/Data/extracted_trees/tree", i, ".laz"))}
+
