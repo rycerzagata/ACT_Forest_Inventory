@@ -120,7 +120,8 @@ tlsPlot(tls, df, map)
 #### TREE SEGMENTATION - DALPONTE APPROACH ####
 
 # Treetops detection
-ttops <- tree_detection(CHM, lmf(4, 2))
+f <- function(x) { x * 0.07 + 3 }
+ttops <- tree_detection(CHM, lmf(f))  # or lmf(4, 2)
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(ttops, col="black", pch = 20, cex=0.5, add=TRUE)
 
@@ -149,3 +150,6 @@ for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
 file1 <- "/Users/HP/Documents/ACT/R/Data/extracted_trees/tree 101 .laz"
 tree <- readLAS(file1)
 plot(tree)
+
+# calculate tree metrics
+metrics <- tree_metrics(trees, func = ~max(Z), attribute = "treeID")
