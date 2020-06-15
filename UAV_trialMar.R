@@ -116,8 +116,7 @@ test_samples
 full_dataset <- rbind(train_samples, test_samples)
 
 # Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
-full_dataset$standing_volume <- ((0.049/10)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
-
+full_dataset$standing_volume <- ((0.049/100)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
 
 #####################################################################################################
 
