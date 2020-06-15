@@ -94,6 +94,11 @@ split <- runif(nrow(training),0,1)>0.3
 train_samples <- subset(training, split)
 test_samples <- subset(training, !split)
 
+
+#train_ind <- sample(seq_len(nrow(training)), size = 50)
+#train_Agata <- training[train_ind,]
+#val_Agata <- training[-train_ind,]
+
 # Checking the number of row of each splitted dataset
 nrow(train_samples)
 nrow(test_samples)
@@ -106,6 +111,14 @@ model <- randomForest(DBH ~ height + crownArea,
 # Predict the DBH of the test dataset
 test_samples$DBH <- predict(model, test_samples)
 test_samples
+
+# Merge both datasets
+full_dataset <- rbind(train_samples, test_samples)
+
+# Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
+full_dataset$standing_volume <- ((0.049/10)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
+
+
 #####################################################################################################
 
 # Point density
@@ -147,5 +160,6 @@ for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   writeLAS(tree, paste("extracted_laz/tree", i, ".laz"))}
 
 ##################################################################################################
+
 
 
