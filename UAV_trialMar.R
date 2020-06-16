@@ -83,6 +83,7 @@ sp_summarise(treetops)
 sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
 #####################################################################################################
+
 library(randomForest)
 set.seed(5)
 
@@ -117,6 +118,14 @@ full_dataset <- rbind(train_samples, test_samples)
 
 # Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
 full_dataset$standing_volume <- ((0.049/100)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
+
+totalVolume <- sum(as.matrix(full_dataset$standing_volume))
+
+total_area <- raster::area(UAV_beech)
+
+m3ha <- totalVolume/(total_area/10000)
+
+write.csv(full_dataset,"/Users/marariza/Downloads/LiDAR.csv", row.names = TRUE)
 
 #####################################################################################################
 

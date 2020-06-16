@@ -98,11 +98,38 @@ sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 #####################################################################################################
 
 # Compute the DBH based on the tree height and crown diameter adapted to the desired species
-crownsPoly$DBH <- dbh(H=crownsPoly$height, CA = crownsPoly$crownDiameter, biome=20)/2
+crownsPoly$DBH <- dbh(H=crownsPoly$height, CA = crownsPoly$crownDiameter, biome=20)/100
 
 # Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
-crownsPoly$standing_volume <- ((0.049)*(crownsPoly$DBH^1.78189)*(crownsPoly$height)^1.08345)/1000
+crownsPoly$standing_volume <- (0.049)*(crownsPoly$DBH^1.78189)*(crownsPoly$height)^1.08345
 hist(crownsPoly$standing_volume)
+
+totalVolume <- sum(as.matrix(crownsPoly$standing_volume))
+
+dataset <- as.data.frame(crownsPoly)
+
+total_area <- raster::area(AHN3_beech)
+
+m3ha <- totalVolume/(total_area/10000)
+
+write.csv(dataset,"/Users/marariza/Downloads/photogrammetry.csv", row.names = TRUE)
+
+#####################################################################################################
+
+# VALIDATION
+
+photogrammetry_dataset <- read.csv("photogrammetry.csv", header=TRUE, sep = ",")
+LiDAR_dataset <- read.csv("LiDAR.csv", header=TRUE, sep = ",")
+
+comparison_RGB_LiDAR <- t.test(photogrammetry_dataset$standing_volume, LiDAR_dataset$standing_volume, 
+                               paired = FALSE, alternative = "two.sided")
+
+comparison_RGB_LiDAR_DBH <- t.test(photogrammetry_dataset$DBH, LiDAR_dataset$DBH, 
+                               paired = FALSE, alternative = "two.sided")
+library(Metrics)
+rmse(photogrammetry_dataset$standing_volume, LiDAR_dataset$standing_volume)
+
+
 
 
 
