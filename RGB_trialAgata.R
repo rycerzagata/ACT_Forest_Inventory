@@ -46,7 +46,7 @@ DSM <- resample(DSM_proj, DTM1, method = "bilinear")
 
 # We compute the CHM substracting also 40.68, which is the difference height between the DSM and the DTM
 # in the area on the left (U-shaped area).
-CHM <- DSM - DTM1 - 40.68
+CHM <- overlay(DSM, DTM1, fun=function(x,y){(x - y - 40.68)})
 CHM <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
 #plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 
@@ -58,7 +58,6 @@ lin <- function(x) { x * 0.02 + 0.5 }
 treetops <- vwf(CHM = CHM, winFun = lin, minHeight = 10)
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(treetops, col="black", pch = 20, cex=0.5, add=TRUE)
-
 
 # We check the mean of the height of the detected tree tops 
 mean(treetops$height)
@@ -94,7 +93,9 @@ hist(crownsPoly$treeVolume)
 # Compute total tree volume in the plot
 totalVolume <- sum(as.matrix(crownsPoly$treeVolume))
 totalVolume
-
-
-
+# COmpute total tree volume per hectare
+holesArea <- 873
+totalArea <- raster::area(AHN3_beech)-holesArea
+m3ha <- totalVolume/(total_area/10000)
+m3ha
 
