@@ -1,11 +1,5 @@
 
-"""
-ACT group 10
-Remote Sensing and GIS Integration 2020
-Title: Forest Inventory through UAV based remote sensing
-Description: This script is made in order to create the CHM using Lidar data from UAV and AHN3 datasets. Derivates like treetops 
-and crown area are computed. The last part of the script is tree segmentation and circumference fitting using RANSAC algorithm.
-"""
+##
 
 ## Determine which file to load: 
 
@@ -60,7 +54,7 @@ plot(CHM_smooth)
 # We use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After we plot it to check how the tree tops look like. 
-lin <- function(x) {x*0.1+1}
+lin <- function(x) {x*0.07+3}
 treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 15)
 
 plot(CHM_smooth, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
@@ -89,6 +83,42 @@ sp_summarise(treetops)
 sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
 #####################################################################################################
+library(randomForest)
+set.seed(5)
+
+# Create a dataframe out of the polygons
+training <- as.data.frame(crownsPoly)
+
+# Creating Train and Test samples
+split <- runif(nrow(training),0,1)>0.3
+train_samples <- subset(training, split)
+test_samples <- subset(training, !split)
+
+
+#train_ind <- sample(seq_len(nrow(training)), size = 50)
+#train_Agata <- training[train_ind,]
+#val_Agata <- training[-train_ind,]
+
+# Checking the number of row of each splitted dataset
+nrow(train_samples)
+nrow(test_samples)
+
+# Train a Random Forest model to predict DBH
+train_samples$DBH <- rnorm(nrow(train_samples), mean=0.4, sd=0.1)
+model <- randomForest(DBH ~ height + crownArea, 
+                      data = train_samples, importance= TRUE, proximity = TRUE, ntree=200)
+
+# Predict the DBH of the test dataset
+test_samples$DBH <- predict(model, test_samples)
+test_samples
+
+# Merge both datasets
+full_dataset <- rbind(train_samples, test_samples)
+
+# Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
+full_dataset$standing_volume <- ((0.049/100)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
+
+#####################################################################################################
 
 # Point density
 density <- grid_density(UAV_beech, res=1)
@@ -114,12 +144,12 @@ plot(trees, color="treeID")
 (max(trees@data$treeID, na.rm=TRUE))
 
 # Normalize UAV point cloud dataset and perform stem segmentation with RANSAC 
-tls = tlsNormalize(UAV_beech, keepGround = FALSE)
-thin = tlsSample(tls, voxelize(0.01))
-map = treeMap(thin, map.hough(hmin = 1, hmax = 2, max_radius = 0.3, min_density = 0.01, min_votes = 2))
-tls2 = stemPoints(tls, map)
-df = stemSegmentation(tls2, sgmt.ransac.circle(n=10))
-tlsPlot(tls, df, map)
+#tls = tlsNormalize(UAV_beech, keepGround = FALSE)
+#thin = tlsSample(tls, voxelize(0.01))
+#map = treeMap(thin, map.hough(hmin = 1, hmax = 2, max_radius = 0.3, min_density = 0.01, min_votes = 2))
+#tls2 = stemPoints(tls, map)
+#df = stemSegmentation(tls2, sgmt.ransac.circle(n=10))
+#tlsPlot(tls, df, map)
 
 # We extract every tree into a different .laz file
 dir.create( "extracted_laz")
@@ -128,8 +158,7 @@ for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
   writeLAS(tree, paste("extracted_laz/tree", i, ".laz"))}
 
-
-
+##################################################################################################
 
 
 
