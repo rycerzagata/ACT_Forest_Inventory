@@ -118,9 +118,30 @@ full_dataset <- rbind(train_samples, test_samples)
 full_dataset$standing_volume <- ((0.049/100)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
 
 total_volume <- sum(as.matrix(full_dataset$standing_volume))
-total_area <- raster::area(beechLas)
-m3ha <- totalVolume/(total_area/10000)
+emptyArea <- 270                                       # area of empty spaces in the forest
+total_area <- raster::area(beechLas) - emptyArea       # area of forest
+m3ha <- totalVolume/(total_area/10000)                 # total tree volume in m^3 per hectare
 m3ha
 
 write.csv(full_dataset,"/Users/marariza/Downloads/UAV-LS-results.csv", row.names = TRUE)
+
+
+
+
+
+file1 <- "/Users/HP/Documents/ACT/R/Data/extracted_trees/tree 1 .laz"
+tree <- readLAS(file1)
+plot(tree)
+
+
+
+
+
+
+
+
+
+
+
+
 
