@@ -46,7 +46,7 @@ CHM <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
 #### TREE SEGMENTATION - DALPONTE APPROACH ####
 set.seed(2020)
 # Treetops detection
-f <- function(x) { x * 0.07 + 3 }
+f <- function(x) { x * 0.08 + 2 }
 ttops <- tree_detection(CHM, lmf(f))  # or lmf(4, 2)
 #ttops <- tree_detection(beechLas, lmf(5))
 #x <- plot(beechLas)
