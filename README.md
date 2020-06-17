@@ -7,7 +7,7 @@
 4. Processing the RGB data and tree volume computation
 
 ## Input data for Speulderbos area
-1. AHN3
+1. AHN3 (kaartblad 32fn2)
 2. UAV LS point cloud dataset
 3. TLS point clud dataset
 4. UAV RGB orthophoto
