@@ -62,13 +62,13 @@ mean(treetops$height)
 # We compute the function MCWS function that implements the watershed algorithm. In this case, the argument
 # minHeight refers to the lowest expected treetop. The result is a raster where each tree crown is 
 # a unique cell value. 
-crowns <- mcws(treetops = treetops, CHM=CHM, minHeight = 15, verbose=FALSE)
+crowns <- mcws(treetops = treetops, CHM=CHM, minHeight = 20, verbose=FALSE)
 plot(crowns, main="Detected tree crowns", col=sample(rainbow(50), length(unique(crowns[])),replace=TRUE), 
      legend=FALSE, xaxt="n", yaxt="n")
 
 # We do the same computation as before but changig the output format to polygons. It takes more processing
 # time but polygons inherit the attributes of treetops as height. Also, crown area is computed for each polygon.
-crownsPoly <- mcws(treetops = treetops, CHM=CHM, minHeight = 8, verbose=FALSE, format="polygons")
+crownsPoly <- mcws(treetops = treetops, CHM=CHM, minHeight = 15, verbose=FALSE, format="polygons")
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
