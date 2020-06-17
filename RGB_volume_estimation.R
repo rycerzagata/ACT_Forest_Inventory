@@ -21,7 +21,7 @@ library(ForestTools)
 readLAS<-lidR::readLAS
 
 ## Setting working directory
-setwd("./ACT_Forest_Inventory")
+setwd("~/ACT_Forest_Inventory")
 
 #### CHM COMPUTATION ####
 # We load and read the beech AHN3 file
@@ -44,7 +44,7 @@ hist(Difference)
 
 # We load the DSM created with photogrammetry from RGB images, we project it to RD New and resample to 
 # have the same resolution as the DTM
-RGB <- "DEM_speulderbos_georef_ar.tif"
+RGB <- "Data/DEM_speulderbos_georef_ar.tif"
 DSM_no_proj <- raster(RGB)
 DSM_proj <- projectRaster(DSM_no_proj, crs = crs(DTM1))
 DSM <- resample(DSM_proj, DTM1, method = "bilinear")
@@ -66,23 +66,23 @@ plot(CHM_smooth)
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After this we plot it to check how the tree tops look like. 
 lin <- function(x) { x * 0.02 + 0.5 }
-treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 1)
+treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 20)
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(treetops, col="black", pch = 20, cex=0.5, add=TRUE)
 
 # Check the mean of the height of the detected tree tops 
 mean(treetops$height)
 
-# Use the function MCWS function that implements the watershed algorithm to produce a map of crowns. In this case, the argument
-# minHeight refers to the lowest expected treetop. The result is a raster where each tree crown is 
-# a unique cell value. 
+# Use the function MCWS function that implements the watershed algorithm to produce a map of crowns. 
+# In this case, the argument minHeight refers to the lowest expected treetop. The result is a raster 
+# where each tree crown is a unique cell value. 
 crowns <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 15, verbose=FALSE)
 plot(crowns, main="Detected tree crowns", col=sample(rainbow(50), length(unique(crowns[])),replace=TRUE), 
      legend=FALSE, xaxt="n", yaxt="n")
 
 # Use the  the MCWS function that implements the watershed algorithm to produce a map of crowns as polygons. It takes more processing
 # time but polygons inherit the attributes of treetops as height. Also, crown area is computed for each polygon.
-crownsPoly <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 10, verbose=FALSE, format="polygons")
+crownsPoly <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 15, verbose=FALSE, format="polygons")
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
@@ -104,7 +104,7 @@ hist(crownsPoly$standing_volume)
 
 # Save the results to a csv file.
 dataset <- as.data.frame(crownsPoly)
-write.csv(dataset,"/Users/marariza/Downloads/photogrammetry.csv", row.names = TRUE)
+write.csv(dataset,"./Data/photogrammetry.csv", row.names = TRUE)
 
 # Compute the total tree volume in m^3
 totalVolume <- sum(as.matrix(crownsPoly$standing_volume))
