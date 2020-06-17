@@ -77,39 +77,45 @@ for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
 
 
 
-#### DBH AND TREE VOLUME ESTIMATION ####
-# Compute the DBH based on the tree height in m and crown diameter in m^2, adapted to the type of biome.
-crownsPoly$DBH <- dbh(H=crownsPoly$height, CA = crownsPoly$crownDiameter, biome=20)/100
+#### DBH PREDICTION ####
+library(randomForest)
+set.seed(2020)
 
-# Compute the standing volume in m^3 from the DBH in cm and the height in m. Source: https://silvafennica.fi/pdf/smf004.pdf
-crownsPoly$standing_volume <- (0.049)*(crownsPoly$DBH^1.78189)*(crownsPoly$height)^1.08345
-hist(crownsPoly$standing_volume)
+# Create a dataframe out of the polygons
+training <- as.data.frame(crownsPoly)
+names(training) <- c("treeID", "height", "crownArea", "crownDiameter")
 
-# Save the results to a csv file.
-dataset <- as.data.frame(crownsPoly)
-write.csv(dataset,"./Data/photogrammetry.csv", row.names = TRUE)
+# Creating Training, Test and Validation samples
+train_ind <- sample(seq_len(nrow(training)), size = 70)
+train_samples <- training[train_ind,]
+test_samples <- training[-train_ind,]
+valid_ind <- sample(seq_len(nrow(train_samples)), size = 20)
+valid_samples <- train_samples[valid_ind,]
+train_samples <- train_samples[-valid_ind,]
 
-# Compute the total tree volume in m^3
-totalVolume <- sum(as.matrix(crownsPoly$standing_volume))
-emptyArea <- 873                                       # area of empty spaces in the forest
-totalArea <- raster::area(AHN3_beech) - emptyArea      # area of forest
-m3ha <- totalVolume/(totalArea/10000)                  # total tree volume in m^3 per hectare
-m3ha
+# Checking the number of row of each splitted dataset
+nrow(train_samples)
+nrow(test_samples)
+nrow(valid_samples)
 
+# Train a Random Forest model to predict DBH
+train_samples$DBH <- rnorm(nrow(train_samples), mean=0.4, sd=0.1)
+model <- randomForest(DBH ~ height + crownArea, 
+                      data = train_samples, importance= TRUE, proximity = TRUE, ntree=200)
 
-#### VALIDATION USING LiDAR DATA ####
-photogrammetry_dataset <- read.csv("photogrammetry.csv", header=TRUE, sep = ",")
-LiDAR_dataset <- read.csv("LiDAR.csv", header=TRUE, sep = ",")
+# Predict the DBH of the test dataset
+test_samples$DBH <- predict(model, test_samples)
+test_samples
 
-comparison_RGB_LiDAR <- t.test(photogrammetry_dataset$standing_volume, LiDAR_dataset$standing_volume, 
-                               paired = FALSE, alternative = "two.sided")
+# Merge both datasets
+full_dataset <- rbind(train_samples, test_samples)
 
-comparison_RGB_LiDAR_DBH <- t.test(photogrammetry_dataset$DBH, LiDAR_dataset$DBH, 
-                                   paired = FALSE, alternative = "two.sided")
-library(Metrics)
-rmse(photogrammetry_dataset$standing_volume, LiDAR_dataset$standing_volume)
+# Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
+full_dataset$standing_volume <- ((0.049/100)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
 
+total_volume <- sum(as.matrix(full_dataset$standing_volume))
+total_area <- raster::area(UAV_beech)
+m3ha <- totalVolume/(total_area/10000)
 
-
-
+write.csv(full_dataset,"/Users/marariza/Downloads/UAV-LS-results.csv", row.names = TRUE)
 
