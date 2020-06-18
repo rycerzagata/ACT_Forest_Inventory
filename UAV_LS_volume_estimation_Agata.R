@@ -98,7 +98,8 @@ set.seed(2020)
 
 # Create a dataframe out of the crown polygons with the chosen sample trees and introduce the DBH measured
 # using the software Cloud Compare
-# no double trees on plot,the stem must be visible, no understory covering stems, returns distributed in cylindrical shapes
+# no double trees on plot,the stem must be visible, no understory covering stems, returns distributed in cylindrical 
+# shapes, trees distributed across a wide range of DBH (5-50 cm) and geographically distributed throughout the area
 sample_index <- c(9:10, 16:17, 19, 21, 23, 26:45, 50:51, 53, 55, 68:69, 75, 79, 82, 84, 88, 91, 95, 96, 99)
 training <- as.data.frame(crownsPoly[sample_index,])
 names(training) <- c("treeID", "height", "crownArea", "crownDiameter")
