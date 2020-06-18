@@ -25,19 +25,31 @@ library(EBImage)
 readLAS<-lidR::readLAS
 
 #Setting working directory
-setwd("/Users/marariza/Downloads")
+#setwd("/Users/marariza/Downloads")
 
 #### CHM COMPUTATION ####
 set.seed(2020)
 
 # Load and read the AHN3 file
-AHN3_clip <- "AHN3_beech.laz"
+#AHN3_clip <- "AHN3_beech.laz"
+AHN3_clip <- "/Users/HP/Documents/ACT/R/Data/AHN3_beech.laz"
 AHN3 <- readLAS(AHN3_clip)
+AHN3 <- lasclipRectangle(AHN3, 176167 , 473712, 176254, 473783)
 
-# Load and clip the Laz file
-lasfile <- "UAV_withGround.laz"
+
+# Load and clip the Laz file (whole UAV LS beech forest)
+# lasfile <- "UAV_withGround.laz"
+lasfile <- "/Users/HP/Documents/ACT/R/Data/UAV_withGround.laz"
 beechLas <- readLAS(lasfile)
-beechLas <- lasclipRectangle(beechLas, 176170, 473657, 176265, 473782)
+# beechLas <- lasclipRectangle(beechLas, 176170, 473657, 176265, 473782)
+
+# Extent of the intersection of TLS and  UAV LS plots
+# xmin       : 176166.8 
+# xmax       : 176253.7 
+# ymin       : 473711.8 
+# ymax       : 473783.3
+
+beechLas <- lasclipRectangle(beechLas, 176170 , 473712, 176254, 473782)
 
 # Compute the DSM with the AHN3 dataset
 DSM <- grid_canopy(beechLas, res=1, p2r(0.2))
@@ -45,6 +57,7 @@ DSM <- grid_canopy(beechLas, res=1, p2r(0.2))
 
 # Compute the DTM with the AHN3 dataset
 DTM <- grid_terrain(AHN3, res=1, algorithm = knnidw(k=6L, p = 2), keep_lowest = FALSE)
+DTM[is.na(DTM)] <- 0
 #plot(DTM, main="DTM", col=matlab.like2(50))
 
 # Compute the CHM and remove one value which is below 0 (-0.005 m)
@@ -53,7 +66,7 @@ CHM[is.na(CHM)] <- 0
 
 # Use focal statistics to smoothen the CHM
 CHM <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
-
+CHM[is.na(CHM)] <- 0
 
 #### TREE SEGMENTATION - DALPONTE APPROACH ####
 set.seed(2020)
@@ -90,7 +103,6 @@ for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
   writeLAS(tree, paste("extracted_laz/tree", i, ".laz"))}
 
-blablabla
 
 #### DBH PREDICTION ####
 library(randomForest)
@@ -98,7 +110,11 @@ set.seed(2020)
 
 # Create a dataframe out of the crown polygons with the chosen sample trees and introduce the DBH measured
 # using the software Cloud Compare
-# no double trees on plot,the stem must be visible, no understory covering stems, returns distributed in cylindrical shapes
+# Create a dataframe out of the crown polygons with the chosen sample trees and introduce the DBH measured
+# using the software Cloud Compare. There are some rules for choosing the right trees:
+# no double trees on plot,the stem must be visible, no understory covering stems, returns distributed in cylindrical 
+# shapes, trees distributed across a wide range of DBH (5-50 cm) and geographically distributed throughout the area
+
 sample_index <- c(9:10, 16:17, 19, 21, 23, 26:45, 50:51, 53, 55, 68:69, 75, 79, 82, 84, 88, 91, 95, 96, 99)
 training <- as.data.frame(crownsPoly[sample_index,])
 names(training) <- c("treeID", "height", "crownArea", "crownDiameter")
@@ -113,7 +129,7 @@ names(test) <- c("treeID", "height", "crownArea", "crownDiameter")
 
 # Train a Random Forest model to predict DBH
 model <- randomForest(DBH ~ height + crownArea, 
-                      data = training, importance= TRUE, proximity = TRUE, ntree=500)
+                      data = training, importance= TRUE, proximity = TRUE, ntree = 500)
 
 # Predict the DBH of the test dataset
 test$DBH <- predict(model, test)
@@ -125,11 +141,10 @@ full_dataset <- rbind(training, test)
 full_dataset$standing_volume <- ((0.049/100)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
 
 totalVolume <- sum(as.matrix(full_dataset$standing_volume))
-emptyArea <- 240                                     # area of empty spaces in the forest
+emptyArea <- 240                    # area of empty spaces in the forest measured with polygons in ArcgIS/QGIS
 totalArea <- raster::area(AHN3) - emptyArea
 m3ha <- totalVolume/(totalArea/10000) 
 m3ha
-
 
 write.csv(full_dataset,"/Users/marariza/Downloads/UAV-LS-results.csv", row.names = TRUE)
 
@@ -150,6 +165,14 @@ comparison_RGB_LiDAR_DBH <- t.test(TLS_dataset$DBH, UAV_LS_dataset$DBH,
 comparison_RGB_LiDAR <- t.test(TLS_dataset$standing_volume, UAV_LS_dataset$standing_volume, 
                                paired = FALSE, alternative = "two.sided")
 
+
+
+library(tidyverse)
+library(caret)
+
+summary <- data.frame( R2 = R2(UAV_LS_dataset$DBH[1:41], TLS_dataset$DBH),
+                       RMSE = RMSE(UAV_LS_dataset$DBH[1:41], TLS_dataset$DBH),
+                       MAE = MAE(UAV_LS_dataset$DBH[1:41], TLS_dataset$DBH))
 
 
 
