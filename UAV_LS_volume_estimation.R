@@ -90,7 +90,7 @@ for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
   writeLAS(tree, paste("extracted_laz/tree", i, ".laz"))}
 
-
+blablabla
 
 #### DBH PREDICTION ####
 library(randomForest)
