@@ -15,7 +15,6 @@ library(raster)
 library(colorRamps)
 library(sp)
 library(rgl)
-library(ggpubr)
 library(rlas)
 library(tiff)
 library(ForestTools)
@@ -32,16 +31,16 @@ set.seed(2020)
 
 # Load and read the AHN3 file
 #AHN3_clip <- "AHN3_beech.laz"
-AHN3_clip <- "/Users/HP/Documents/ACT/R/Data/AHN3_beech.laz"
+AHN3_clip <- "/Users/HP/Documents/ACT/R/Data/AHN3.laz"
 AHN3 <- readLAS(AHN3_clip)
-AHN3 <- lasclipRectangle(AHN3, 176167 , 473712, 176254, 473783)
-
+#AHN3 <- lasclipRectangle(AHN3, 176167 , 473712, 176254, 473783)
+AHN3 <- lasclipPolygon(AHN3, xpoly = c(176254,  176185, 176167, 176236), ypoly = c(473741, 473712, 473754, 473783))
 
 # Load and clip the Laz file (whole UAV LS beech forest)
 # lasfile <- "UAV_withGround.laz"
 lasfile <- "/Users/HP/Documents/ACT/R/Data/UAV_withGround.laz"
 beechLas <- readLAS(lasfile)
-# beechLas <- lasclipRectangle(beechLas, 176170, 473657, 176265, 473782)
+#beechLas <- lasclipRectangle(beechLas, 176170, 473657, 176265, 473782)
 
 # Extent of the intersection of TLS and  UAV LS plots
 # xmin       : 176166.8 
@@ -49,7 +48,8 @@ beechLas <- readLAS(lasfile)
 # ymin       : 473711.8 
 # ymax       : 473783.3
 
-beechLas <- lasclipRectangle(beechLas, 176170 , 473712, 176254, 473782)
+#beechLas <- lasclipRectangle(beechLas, 176170 , 473712, 176254, 473782)
+beechLas <- lasclipPolygon(beechLas, xpoly = c(176254,  176185, 176167, 176236), ypoly = c(473741, 473712, 473754, 473783))
 
 # Compute the DSM with the AHN3 dataset
 DSM <- grid_canopy(beechLas, res=1, p2r(0.2))
@@ -73,7 +73,7 @@ set.seed(2020)
 
 # Treetops detection using an algorithm based on a local maximum filter.
 f <- function(x) { x * 0.08 + 2 }
-ttops <- tree_detection(CHM, lmf(f))  # or lmf(4, 2) for las
+ttops <- tree_detection(CHM, lmf(4,2))  # or lmf(4, 2) for las
 #ttops <- tree_detection(beechLas, lmf(5)) # you can do it using las file too but it takes some time
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(ttops, col="black", pch = 20, cex=0.5, add=TRUE)
@@ -97,11 +97,11 @@ trees <- lastrees(vegpoints, dalponte2016(chm = CHM, treetops = ttops, ID = 'tre
 #plot(trees, color="treeID")
 
 # Extract every tree into a separate .laz file
-dir.create( "extracted_laz")
+dir.create( "/Users/HP/Documents/ACT/R/Data/extracted_trees")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("extracted_laz/tree", i, ".laz"))}
+  writeLAS(tree, paste("/Users/HP/Documents/ACT/R/Data/extracted_trees/tree", i, ".laz"))}
 
 
 #### DBH PREDICTION ####
@@ -138,10 +138,11 @@ test$DBH <- predict(model, test)
 full_dataset <- rbind(training, test)
 
 # Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
-full_dataset$standing_volume <- ((0.049/100)*(full_dataset$DBH^1.78189)*(full_dataset$height)^1.08345)*1000
+full_dataset$standing_volume <- ((0.049)*((full_dataset$DBH*100)^1.78189)*(full_dataset$height)^1.08345)/1000
+
 
 totalVolume <- sum(as.matrix(full_dataset$standing_volume))
-emptyArea <- 240                    # area of empty spaces in the forest measured with polygons in ArcgIS/QGIS
+emptyArea <- 240                               # area of empty spaces in the forest measured with polygons in ArcgIS/QGIS
 totalArea <- raster::area(AHN3) - emptyArea
 m3ha <- totalVolume/(totalArea/10000) 
 m3ha
