@@ -1,0 +1,18 @@
+# History files
+.Rhistory
+.Rapp.history
+
+# Session Data files
+.RData
+
+# User-specific files
+.Ruserdata
+
+
+# Output files
+Data/*.csv
+Data/*.laz
+
+# RStudio files
+.Rproj.user/
+
