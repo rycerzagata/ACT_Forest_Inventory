@@ -150,11 +150,11 @@ t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_LS_dataset$standing_vol
 
 
 validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" = c(trees_UAV, trees_TLS), 
-                                 "Trees per ha" = c(trees_ha_UAV, trees_ha_TLS), "Mean height" = c(mean_height_UAV, mean_height_TLS),
-                                 "Mean DBH" = c(mean_DBH_UAV, mean_DBH_TLS), "t-test DBH" = t_test_DBH$p.value,
+                                 "Trees per ha" = c(trees_ha_UAV, trees_ha_TLS), "Mean height (m)" = c(mean_height_UAV, mean_height_TLS),
+                                 "Mean DBH (m)" = c(mean_DBH_UAV, mean_DBH_TLS), "t-test DBH" = t_test_DBH$p.value,
                                  "CI DBH" =t_test_DBH$conf.int,"St error DBH" = t_test_DBH$stderr,
-                                 "Mean volume" = c(mean_volume_UAV, mean_volume_TLS),"t-test volume" = t_test_volume$p.value,
-                                 "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m^3 per ha" = c(m3ha, m3ha_TLS))
+                                 "Mean volume (m3)" = c(mean_volume_UAV, mean_volume_TLS),"t-test volume" = t_test_volume$p.value,
+                                 "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m3 per ha" = c(m3ha, m3ha_TLS))
 
 
 # Export the results in an excel
