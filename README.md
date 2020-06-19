@@ -21,3 +21,5 @@ The scripts than can be used to compute canopy height model (CHM) using three ty
 The script estimates the DBH and volume of each tree based on CHM derivates and empirical models.
 4. ***UAV_LS_volume_estimation.R***  
 The script estimates the DBH and volume of each tree using a RandomForest model taking CHM derivates and manually collected training data as input.
+5. ***TLS_beech_segmentation.R,TLS_beech_segmentation.R***  
+This script is made in order to create the CHM using TLS data. Derivates like treetops are computed. The last part of the script is tree segmentation using Dalponte approach.
