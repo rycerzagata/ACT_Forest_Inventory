@@ -2,7 +2,7 @@
 ACT group 10
 Remote Sensing and GIS Integration 2020
 Title: Forest Inventory through UAV based remote sensing
-Description: This script can be used to compute the standing volume for beech from AHN3 and UAV RGB data.
+Description: This script can be used to compute the standing volume for fir from AHN3 and UAV RGB data.
 At the end of the script some validation with TLS data is performed. 
 
 """
@@ -29,8 +29,8 @@ set.seed(2020)
 # Load and read the AHN3 file
 AHN3_clip <- "Data/AHN3.laz"
 AHN3 <- readLAS(AHN3_clip)
-x <-  c(176254, 176185, 176167, 176236)
-y <- c(473741, 473712, 473754, 473783)
+x <- c(176036, 176064, 176090, 176109,  176060, 176052)
+y <- c(473695, 473725, 473723, 473679,  473657, 473657)
 AHN3 <- lasclipPolygon(AHN3, x, y, inside=TRUE)
 
 # We compute two DTMs modifying just one parameter (keep lowest)
@@ -67,7 +67,6 @@ CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
 plot(CHM_smooth)
 
 #### CHM DERIVATES COMPUTATION ####
-
 # Use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After this we plot it to check how the tree tops look like. 
@@ -101,30 +100,29 @@ sp_summarise(treetops)
 sp_summarise(crownsPoly, variables=c("crownArea", "height"))
 
 #### DBH AND TREE VOLUME ESTIMATION ####
-
 # Compute the DBH based on the tree height in m and crown diameter in m^2, adapted to the type of biome.
 crownsPoly$DBH <- dbh(H=crownsPoly$height, CA = crownsPoly$crownDiameter, biome=20)/100
 
 # Compute the standing volume in m^3 from the DBH in cm and the height in m. Source: https://silvafennica.fi/pdf/smf004.pdf
-crownsPoly$standing_volume <- ((0.049)*((crownsPoly$DBH*100)^1.78189)*(crownsPoly$height)^1.08345)/1000
+crownsPoly$standing_volume <- (((crownsPoly$DBH*100)^1.90053)*(crownsPoly$height^0.80726)*exp(-2.43151))/1000
 hist(crownsPoly$standing_volume)
 
 # Save the results to a csv file.
 dataset <- as.data.frame(crownsPoly)
-write.csv(dataset,"Data/photogrammetry_beech.csv", row.names = TRUE)
+write.csv(dataset,"Data/photogrammetry_fir.csv", row.names = TRUE)
 
 # Compute the total tree volume in m^3
 totalVolume <- sum(as.matrix(crownsPoly$standing_volume))
 emptyArea <- 240                                       # area of empty spaces in the forest measured with polygons in ArcgIS/QGIS
-totalArea <- raster::area(AHN3) - emptyArea            # area of forest
+totalArea <- raster::area(AHN3) - emptyArea      # area of forest
 m3ha <- totalVolume/(totalArea/10000)                  # total tree volume in m^3 per hectare
 m3ha
 
-##### VALIDATION ####
+# VALIDATION
 
 # Read the excels generated above and in the TLS scripts
-TLS_dataset <- read.csv("Data/TLS_beech.csv", header=TRUE, sep = ",")
-UAV_LS_dataset <- read.csv("Data/photogrammetry_beech.csv", header=TRUE, sep = ",")
+TLS_dataset <- read.csv("Data/TLS_fir.csv", header=TRUE, sep = ",")
+UAV_LS_dataset <- read.csv("Data/photogrammetry_fir.csv", header=TRUE, sep = ",")
 
 # Compute some statistics of both datasets
 trees_UAV <- nrow(UAV_LS_dataset)
@@ -158,4 +156,4 @@ validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" 
 
 
 # Export the results in an excel
-write.table(validation_results, "Data/validation_results_RGB_beech.csv", row.names = TRUE)
+write.table(validation_results, "Data/validation_results_RGB_fir.csv", row.names = TRUE)
