@@ -1,11 +1,11 @@
-
 """
 ACT group 10
 Remote Sensing and GIS Integration 2020
 Title: Forest Inventory through UAV based remote sensing
 Description: This script is made in order to create the CHM using Lidar data from UAV and AHN3 datasets. Derivates like treetops 
 and crown area are computed. Next part of the script is tree segmentation and prediction of DBH using Random Forest 
-algorithm. The prediction of tree volume is computed based on the model and results are validated.
+algorithm. The prediction of tree volume is computed based on the model and results are validated. 
+
 """
 
 # Loading the required libraries
@@ -24,33 +24,23 @@ library(EBImage)
 readLAS<-lidR::readLAS
 
 #Setting working directory
-#setwd("/Users/marariza/Downloads")
+setwd("../ACT_Forest_Inventory")
 
 #### CHM COMPUTATION ####
 set.seed(2020)
 
 # Load and read the AHN3 file
-#AHN3_clip <- "AHN3_beech.laz"
-AHN3_clip <- "/Users/HP/Documents/ACT/R/Data/AHN3.laz"
+AHN3_clip <- "Data/AHN3.laz"
 AHN3 <- readLAS(AHN3_clip)
-#AHN3 <- lasclipRectangle(AHN3, 176167 , 473712, 176254, 473783)
-AHN3 <- lasclipPolygon(AHN3, xpoly = c(176254,  176185, 176167, 176236), ypoly = c(473741, 473712, 473754, 473783))
 
-# Load and clip the Laz file (whole UAV LS beech forest)
-# lasfile <- "UAV_withGround.laz"
-lasfile <- "/Users/HP/Documents/ACT/R/Data/UAV_withGround.laz"
+# Load and clip the Laz file
+lasfile <- "Data/UAV_withGround.laz"
 beechLas <- readLAS(lasfile)
-#beechLas <- lasclipRectangle(beechLas, 176170, 473657, 176265, 473782)
-
-# Extent of the intersection of TLS and  UAV LS plots
-# xmin       : 176166.8 
-# xmax       : 176253.7 
-# ymin       : 473711.8 
-# ymax       : 473783.3
-
-#beechLas <- lasclipRectangle(beechLas, 176170 , 473712, 176254, 473782)
-beechLas <- lasclipPolygon(beechLas, xpoly = c(176254,  176185, 176167, 176236), ypoly = c(473741, 473712, 473754, 473783))
-
+x <-  c(176254, 176185, 176167, 176236)
+y <- c(473741, 473712, 473754, 473783)
+AHN3 <- lasclipPolygon(AHN3, x, y, inside=TRUE)
+beechLas <- lasclipPolygon(beechLas, x, y, inside=TRUE)
+                           
 # Compute the DSM with the AHN3 dataset
 DSM <- grid_canopy(beechLas, res=1, p2r(0.2))
 #plot(DSM, main="DSM", col=matlab.like2(50))
@@ -68,12 +58,13 @@ CHM[is.na(CHM)] <- 0
 CHM <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
 CHM[is.na(CHM)] <- 0
 
+
 #### TREE SEGMENTATION - DALPONTE APPROACH ####
 set.seed(2020)
 
 # Treetops detection using an algorithm based on a local maximum filter.
 f <- function(x) { x * 0.08 + 2 }
-ttops <- tree_detection(CHM, lmf(4,2))  # or lmf(4, 2) for las
+ttops <- tree_detection(CHM, lmf(f))  
 #ttops <- tree_detection(beechLas, lmf(5)) # you can do it using las file too but it takes some time
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(ttops, col="black", pch = 20, cex=0.5, add=TRUE)
@@ -97,11 +88,11 @@ trees <- lastrees(vegpoints, dalponte2016(chm = CHM, treetops = ttops, ID = 'tre
 #plot(trees, color="treeID")
 
 # Extract every tree into a separate .laz file
-dir.create( "/Users/HP/Documents/ACT/R/Data/extracted_trees")
+dir.create( "Data/extracted_laz_beech")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("/Users/HP/Documents/ACT/R/Data/extracted_trees/tree", i, ".laz"))}
+  writeLAS(tree, paste("Data/extracted_laz_beech/tree", i, ".laz"))}
 
 
 #### DBH PREDICTION ####
@@ -109,19 +100,13 @@ library(randomForest)
 set.seed(2020)
 
 # Create a dataframe out of the crown polygons with the chosen sample trees and introduce the DBH measured
-# using the software Cloud Compare
-# Create a dataframe out of the crown polygons with the chosen sample trees and introduce the DBH measured
 # using the software Cloud Compare. There are some rules for choosing the right trees:
 # no double trees on plot,the stem must be visible, no understory covering stems, returns distributed in cylindrical 
-# shapes, trees distributed across a wide range of DBH (5-50 cm) and geographically distributed throughout the area
-
-sample_index <- c(9:10, 16:17, 19, 21, 23, 26:45, 50:51, 53, 55, 68:69, 75, 79, 82, 84, 88, 91, 95, 96, 99)
+# shapes, trees distributed across a wide range of DBH (5-50 cm) and geographically distributed throughout the area.
+sample_index <- c(1, 4, 6, 15, 20, 23, 24, 30, 33:35, 38, 41)
 training <- as.data.frame(crownsPoly[sample_index,])
 names(training) <- c("treeID", "height", "crownArea", "crownDiameter")
-training$DBH <- c(0.426, 0.45, 0.402, 0.594, 0.391, 0.814, 0.507, 0.391, 0.387, 0.359, 0.487, 0.511, 
-                  0.377, 0.362, 0.328, 0.412, 0.427, 0.35, 0.447, 0.389, 0.325, 0.442, 0.389, 0.428, 
-                  0.432, 0.39, 0.481, 0.376, 0.505, 0.525, 0.454, 0.47, 0.359, 0.514, 0.516, 0.461, 
-                  0.308, 0.74, 0.479, 0.411, 0.31, 0.252)
+training$DBH <- c(0.594, 0.43, 0.4, 0.49, 0.438, 0.674, 0.53, 0.327, 0.3215,0.3055, 0.301, 0.293, 0.322)
 
 # Create the test dataset 
 test <- as.data.frame(crownsPoly[-sample_index,])
@@ -140,40 +125,51 @@ full_dataset <- rbind(training, test)
 # Compute the standing volume with the DBH and the height. Source: https://silvafennica.fi/pdf/smf004.pdf
 full_dataset$standing_volume <- ((0.049)*((full_dataset$DBH*100)^1.78189)*(full_dataset$height)^1.08345)/1000
 
-
 totalVolume <- sum(as.matrix(full_dataset$standing_volume))
-emptyArea <- 240                               # area of empty spaces in the forest measured with polygons in ArcgIS/QGIS
+emptyArea <- 200                            # area of empty spaces in the forest measured with polygons in ArcgIS/QGIS
 totalArea <- raster::area(AHN3) - emptyArea
 m3ha <- totalVolume/(totalArea/10000) 
 m3ha
 
-write.csv(full_dataset,"/Users/marariza/Downloads/UAV-LS-results.csv", row.names = TRUE)
+write.csv(full_dataset,"Data/UAV-LS-results_beech.csv", row.names = TRUE)
 
 
 #### VALIDATION ####
 
-# Mean squared error of the RF model
-MSE <- mean(model$mse[1:500])
+# Read the excels generated above and in the TLS scripts
+TLS_dataset <- read.csv("Data/TLS_beech.csv", header=TRUE, sep = ",")
+UAV_LS_dataset <- read.csv("Data/UAV-LS-results_beech.csv", header=TRUE, sep = ",")
 
-TLS_dataset <- read.csv("TLS_beech.csv", header=TRUE, sep = ",")
-UAV_LS_dataset <- read.csv("UAV-LS-results.csv", header=TRUE, sep = ",")
+# Compute some statistics of both datasets
+trees_UAV <- nrow(UAV_LS_dataset)
+trees_TLS <- nrow(TLS_dataset)
+trees_ha_UAV <- trees_UAV/(totalArea/10000)
+trees_ha_TLS <- trees_TLS/(totalArea/10000)
+mean_height_UAV <- mean(UAV_LS_dataset$height)
+mean_height_TLS <- mean(TLS_dataset$height)
+mean_DBH_UAV <- mean(UAV_LS_dataset$DBH)
+mean_DBH_TLS <- mean(TLS_dataset$DBH)
+m3ha_TLS <- sum(TLS_dataset$standing_volume)/(totalArea/10000)
 
 # Compare if there is a significant difference between the DBH from TLS and UAV-LS
-comparison_RGB_LiDAR_DBH <- t.test(TLS_dataset$DBH, UAV_LS_dataset$DBH, 
+t_test_DBH <- t.test(TLS_dataset$DBH, UAV_LS_dataset$DBH, 
                                    paired = FALSE, alternative = "two.sided")
 
+mean_volume_UAV <- mean(UAV_LS_dataset$standing_volume)
+mean_volume_TLS <- mean(TLS_dataset$standing_volume)
+
 # Compare if there is a significant difference between the standing volume from TLS and UAV-LS
-comparison_RGB_LiDAR <- t.test(TLS_dataset$standing_volume, UAV_LS_dataset$standing_volume, 
+t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_LS_dataset$standing_volume, 
                                paired = FALSE, alternative = "two.sided")
 
 
-
-library(tidyverse)
-library(caret)
-
-summary <- data.frame( R2 = R2(UAV_LS_dataset$DBH[1:41], TLS_dataset$DBH),
-                       RMSE = RMSE(UAV_LS_dataset$DBH[1:41], TLS_dataset$DBH),
-                       MAE = MAE(UAV_LS_dataset$DBH[1:41], TLS_dataset$DBH))
-
-
-
+validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" = c(trees_UAV, trees_TLS), 
+                                 "Trees per ha" = c(trees_ha_UAV, trees_ha_TLS), "Mean height" = c(mean_height_UAV, mean_height_TLS),
+                                 "Mean DBH" = c(mean_DBH_UAV, mean_DBH_TLS), "t-test DBH" = t_test_DBH$p.value,
+                                 "CI DBH" =t_test_DBH$conf.int,"St error DBH" = t_test_DBH$stderr,
+                                 "Mean volume" = c(mean_volume_UAV, mean_volume_TLS),"t-test volume" = t_test_volume$p.value,
+                                 "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m^3 per ha" = c(m3ha, m3ha_TLS))
+  
+  
+# Export the results in an excel
+write.table(validation_results, "Data/validation_results_LS_beech.csv", row.names = TRUE)
