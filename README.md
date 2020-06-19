@@ -17,5 +17,5 @@
 The scripts can be used to estimate the tree volume using CHM based on orthophoto and AHN3 and empirical equations for beech/ Douglas fir forest.
 2. ***UAV_LS_beech.R and UAV_LS_fir.R***   
 The scripts than can be used to compute tree volume using CHM derivates produced from UAV point cloud and AHN3 as well as the products of Dalponte's tree segmentation algorithm. The volume is predicted by RandomForest model with manually measured tree metrics used as training data.
-3. ***TLS_beech_segmentation.R,TLS_fir_segmentation.R***  
+3. ***TLS_beech_segmentation.R and TLS_fir_segmentation.R***  
 This script is made in order to create the CHM using TLS data. Derivates like treetops are computed. The last part of the script is tree segmentation using Dalponte approach.
