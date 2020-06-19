@@ -12,6 +12,7 @@
 # Output files
 Data/*.csv
 Data/*.laz
+Data/extracted_laz_beech/*.laz
 
 # RStudio files
 .Rproj.user/
