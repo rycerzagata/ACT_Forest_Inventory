@@ -29,13 +29,7 @@ unzip(zipfile,exdir=outdir)
 ## load each data to process until segmentation
 ## read laz file of TLS data
 tls_file <- "Data/TLS_douglas_fir/tls_dfir_ground_cliped_agata_634_159.laz"
-tls <- readTLS(tls_file)
-
-## clip into the intersection part between UAV LiDAR and TLS
-x <- c(176036, 176064, 176090, 176109,  176060, 176052)
-y <- c(473695, 473725, 473723, 473679,  473657, 473657)
-
-douglas <- lasclipPolygon(tls, x, y, inside=TRUE)
+douglas <- readTLS(tls_file)
 
 # Computing the DSM with the TLS dataset
 DSM <- grid_canopy(douglas, res=1, p2r(0.2))
