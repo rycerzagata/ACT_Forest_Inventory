@@ -8,12 +8,8 @@ Description: This script is made in order to create tree segmentation fitting us
 # Loading the required libraries
 library(lidR)
 library(raster)
-library(colorRamps)
-library(sp)
 library(rgl)
-library(ggpubr)
 library(rlas)
-library(tiff)
 library(ForestTools)
 library(itcSegment)
 library(TreeLS)
@@ -23,10 +19,10 @@ library(rLiDAR)
 
 #### CHM COMPUTATION ####
 ## Setting working directory
-setwd("E:/ACT DATA/TLS_VAL")
+setwd("../ACT_Forest_Inventory")
 
 # We load and read the AHN3 file
-lasfile <- "E:/ACT DATA/LAZ/TLS_ground/tls_beech_ground_aligned.laz"
+lasfile <- "Data/tls_beech_ground_aligned.laz"
 beechLas <- readTLS(lasfile)
 
 
@@ -57,11 +53,11 @@ trees <- lastrees(nlas, dalponte2016(CHM, ttops))
 plot(trees, color="treeID") 
 
 # We extract every tree into a different .laz file
-dir.create( "E:/ACT DATA/TLS_VAL/extracted_trees_beech_align_second")
+dir.create( "Data/extracted_laz_tls_beech")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("E:/ACT DATA/TLS_VAL/extracted_trees_beech_align/tree", i, ".laz"))}
+  writeLAS(tree, paste("Data/extracted_laz_tls_beech/tree", i, ".laz"))}
 
 
 
