@@ -11,22 +11,19 @@ library(raster)
 library(sp)
 library(rgl)
 library(lidR)
-library(lidR)
 library(colorRamps)
-library(ggpubr)
 library(rlas)
-library(tiff)
 library(ForestTools)
 library(itcSegment)
 library(TreeLS)
 
 ## Setting working directory
-setwd("D:/01. Kuliah/02. Materi/Period 6/process/R_script")
+setwd("../ACT_Forest_Inventory")
 
-## Douglas Fir species has a large size so it must divides into 6 files
+## Douglas Fir species has a large size so it must be divided into 6 files
 ## create folder and unzip data
-zipfile <- 'D:/01. Kuliah/02. Materi/Period 6/process/R_script/Data/douglas_fir_data.zip'
-outdir <- 'D:/01. Kuliah/02. Materi/Period 6/process/R_script/Data/douglas'
+zipfile <- 'Data/douglas_fir_data.zip'
+outdir <- 'Data/douglas'
 unzip(zipfile,exdir=outdir)
 
 ## load each data to process until segmentation
@@ -68,11 +65,11 @@ plot(trees, color="treeID")
 
 # Extract every tree into a separate .laz file
 # Give a different folder name for each dataset
-dir.create( "extracted_laz/clipped_634_159")
+dir.create( "Data/extracted_laz/clipped_634_159")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("extracted_laz/clipped_634_159/tree", i, ".laz"))}
+  writeLAS(tree, paste("Data/extracted_laz/clipped_634_159/tree", i, ".laz"))}
 
 
 
