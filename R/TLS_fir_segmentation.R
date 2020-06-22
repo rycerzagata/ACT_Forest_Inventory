@@ -60,16 +60,18 @@ crownsPoly <- mcws(treetops = ttops, CHM=chm, minHeight = 8, verbose=FALSE, form
 # Normalize the point cloud using DTM
 nlas <- lasnormalize(douglas, DTM)
 
+# Tree segmentation
 trees <- lastrees(nlas, dalponte2016(chm, ttops))
 plot(trees, color="treeID") 
 
 # Extract every tree into a separate .laz file
 # Give a different folder name for each dataset
-dir.create( "Data/extracted_laz/clipped_634_159")
+dir.create( "Data/extracted_laz_tls")
+dir.create( "Data/extracted_laz_tls/clipped_634_159")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("Data/extracted_laz/clipped_634_159/tree", i, ".laz"))}
+  writeLAS(tree, paste("Data/extracted_laz_tls/clipped_634_159/tree", i, ".laz"))}
 
 
 
