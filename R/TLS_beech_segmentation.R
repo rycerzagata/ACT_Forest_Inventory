@@ -22,6 +22,10 @@ library(rLiDAR)
 setwd("../ACT_Forest_Inventory")
 
 # We load and read the AHN3 file
+zipfile <- 'Data/TLS_beech.zip'
+outdir <- 'Data'
+unzip(zipfile,exdir=outdir)
+
 lasfile <- "Data/tls_beech_ground_aligned.laz"
 beechLas <- readTLS(lasfile)
 
