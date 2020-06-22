@@ -22,13 +22,13 @@ setwd("../ACT_Forest_Inventory")
 
 ## Douglas Fir species has a large size so it must be divided into 6 files
 ## create folder and unzip data
-zipfile <- 'Data/douglas_fir_data.zip'
-outdir <- 'Data/douglas'
+zipfile <- 'Data/TLS_douglas_fir.zip'
+outdir <- 'Data/TLS_douglas_fir'
 unzip(zipfile,exdir=outdir)
 
 ## load each data to process until segmentation
 ## read laz file of TLS data
-tls_file <- "Data/douglas/tls_dfir_ground_cliped_agata_634_159.laz"
+tls_file <- "Data/TLS_douglas_fir/tls_dfir_ground_cliped_agata_634_159.laz"
 tls <- readTLS(tls_file)
 
 ## clip into the intersection part between UAV LiDAR and TLS
