@@ -8,7 +8,7 @@
 5. Validation of volume estimations from both UAV-LS and UAV RGB using TLS data
 
 ## Input data for Speulderbos area
-1. AHN3 puntenwolk (kaartblad 32fn2). The downloaded dataset is cropped to the extent of the study area to reduce its size (from 4 GB to 4,6 MB). Source: http://esrinlcontent.maps.arcgis.com/apps/Embed/index.html?appid=a3dfa5a818174aa787392e461c80f781 
+1. AHN3 puntenwolk (kaartblad 32fn2). The downloaded dataset is cropped to the extent of the study area (175981, 473657, 176265, 473782) to reduce its size (from 4 GB to 4,6 MB). Source: http://esrinlcontent.maps.arcgis.com/apps/Embed/index.html?appid=a3dfa5a818174aa787392e461c80f781 
 2. UAV LS point cloud dataset
 3. UAV RGB orthophoto
 4. TLS point clud dataset
