@@ -15,6 +15,7 @@ library(rgl)
 library(tiff)
 library(itcSegment)
 library(ForestTools)
+library(Metrics)
 library(colorRamps)
 
 readLAS<-lidR::readLAS
