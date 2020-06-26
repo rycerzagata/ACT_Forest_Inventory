@@ -10,10 +10,8 @@ At the end of the script some validation with TLS data is performed.
 # Loading the required libraries
 library(lidR)
 library(raster)
-library(colorRamps)
 library(sp)
 library(rgl)
-library(rlas)
 library(tiff)
 library(itcSegment)
 library(ForestTools)
@@ -27,12 +25,11 @@ setwd("../ACT_Forest_Inventory")
 set.seed(2020)
 
 # Load and read the AHN3 file
-AHN3_clip <- "Data/AHN3.laz"
+AHN3_clip <- "Data/ps02_AHN3.laz"
 AHN3 <- readLAS(AHN3_clip)
 x <- c(176036, 176064, 176090, 176109,  176060, 176052)
 y <- c(473695, 473725, 473723, 473679,  473657, 473657)
 AHN3 <- lasclipPolygon(AHN3, x, y, inside=TRUE)
-
 # We compute two DTMs modifying just one parameter (keep lowest)
 DTM1 <- grid_terrain(AHN3, res=1, algorithm = knnidw(k=6L, p = 2), keep_lowest = FALSE)
 DTM2 <- grid_terrain(AHN3, res=1, algorithm = knnidw(k=6L, p = 2), keep_lowest=TRUE)
@@ -49,18 +46,19 @@ hist(Difference)
 
 # We load the DSM created with photogrammetry from RGB images, we project it to RD New and resample to 
 # have the same resolution as the DTM
-RGB <- "Data/DEM_speulderbos_georef_ar.tif"
+RGB <- "Data/ps02_UAV_RGB.tif"
 DSM_no_proj <- raster(RGB)
 DSM_proj <- projectRaster(DSM_no_proj, crs = crs(DTM1))
 DSM <- resample(DSM_proj, DTM1, method = "bilinear")
 
 # Compute the CHM substracting also 40.68, which is the difference height between the DSM and the DTM
-# in the area on the left (U-shaped area) and plot if needed.
-CHM <- DSM - DTM1 - 40.68
+# in the area on the left side of the Speulderbos (U-shaped area) and plot if needed (98.8 - 48.8).
+CHM <- DSM - DTM1 - 50
 # plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
-
-#Remove NA values
+summary(CHM)
+# Remove values lower than 0 and NA values
 CHM[is.na(CHM)] <- 0
+CHM[CHM<0] <- 0
 
 # Use the focal statistics to smooth the CHM
 CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
@@ -71,23 +69,16 @@ plot(CHM_smooth)
 # forestry and set the minimum height of trees at 10, but those variables can be modified. 
 # After this we plot it to check how the tree tops look like. 
 lin <- function(x) { x * 0.02 + 0.5 }
-treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 20)
+treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 26)
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(treetops, col="black", pch = 20, cex=0.5, add=TRUE)
 
 # Check the mean of the height of the detected tree tops 
 mean(treetops$height)
 
-# Use the function MCWS function that implements the watershed algorithm to produce a map of crowns. 
-# In this case, the argument minHeight refers to the lowest expected treetop. The result is a raster 
-# where each tree crown is a unique cell value. 
-crowns <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 15, verbose=FALSE)
-plot(crowns, main="Detected tree crowns", col=sample(rainbow(50), length(unique(crowns[])),replace=TRUE), 
-     legend=FALSE, xaxt="n", yaxt="n")
-
 # Use the  the MCWS function that implements the watershed algorithm to produce a map of crowns as polygons. It takes more processing
 # time but polygons inherit the attributes of treetops as height. Also, crown area is computed for each polygon.
-crownsPoly <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 15, verbose=FALSE, format="polygons")
+crownsPoly <- mcws(treetops = treetops, CHM=CHM_smooth, minHeight = 23, verbose=FALSE, format="polygons")
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
@@ -109,7 +100,7 @@ hist(crownsPoly$standing_volume)
 
 # Save the results to a csv file.
 dataset <- as.data.frame(crownsPoly)
-write.csv(dataset,"Data/photogrammetry_fir.csv", row.names = TRUE)
+write.csv(dataset,"Data/pr02_UAV_RGB_fir.csv", row.names = TRUE)
 
 # Compute the total tree volume in m^3
 totalVolume <- sum(as.matrix(crownsPoly$standing_volume))
@@ -121,8 +112,8 @@ m3ha
 # VALIDATION
 
 # Read the excels generated above and in the TLS scripts
-TLS_dataset <- read.csv("Data/TLS_fir.csv", header=TRUE, sep = ",")
-UAV_LS_dataset <- read.csv("Data/photogrammetry_fir.csv", header=TRUE, sep = ",")
+TLS_dataset <- read.csv("Data/pr01_TLS_fir_valid.csv", header=TRUE, sep = ",")
+UAV_LS_dataset <- read.csv("Data/pr02_UAV_RGB_fir.csv", header=TRUE, sep = ",")
 
 # Compute some statistics of both datasets
 trees_UAV <- nrow(UAV_LS_dataset)
@@ -155,5 +146,7 @@ validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" 
                                  "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m3 per ha" = c(m3ha, m3ha_TLS))
 
 
+validation_results
+
 # Export the results in an excel
-write.table(validation_results, "Data/validation_results_RGB_fir.csv", row.names = TRUE)
+write.table(validation_results, "Data/pr02_UAV_RGB_valid.csv", row.names = TRUE)

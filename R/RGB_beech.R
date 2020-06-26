@@ -6,14 +6,13 @@ Description: This script can be used to compute the standing volume for beech fr
 At the end of the script some validation with TLS data is performed. 
 
 """
+start_time <- Sys.time()
 
 # Loading the required libraries
 library(lidR)
 library(raster)
-library(colorRamps)
 library(sp)
 library(rgl)
-library(rlas)
 library(tiff)
 library(itcSegment)
 library(ForestTools)
@@ -21,13 +20,13 @@ library(ForestTools)
 readLAS<-lidR::readLAS
 
 ## Setting working directory
-setwd("../ACT_Forest_Inventory")
+setwd("~/ACT/ACT_Forest_Inventory")
 
 #### CHM COMPUTATION ####
 set.seed(2020)
 
 # Load and read the AHN3 file
-AHN3_clip <- "Data/AHN3.laz"
+AHN3_clip <- "Data/ps02_AHN3.laz"
 AHN3 <- readLAS(AHN3_clip)
 x <-  c(176254, 176185, 176167, 176236)
 y <- c(473741, 473712, 473754, 473783)
@@ -49,18 +48,19 @@ hist(Difference)
 
 # We load the DSM created with photogrammetry from RGB images, we project it to RD New and resample to 
 # have the same resolution as the DTM
-RGB <- "Data/DEM_speulderbos_georef_ar.tif"
+RGB <- "Data/ps02_UAV_RGB.tif"
 DSM_no_proj <- raster(RGB)
 DSM_proj <- projectRaster(DSM_no_proj, crs = crs(DTM1))
 DSM <- resample(DSM_proj, DTM1, method = "bilinear")
 
-# Compute the CHM substracting also 40.68, which is the difference height between the DSM and the DTM
-# in the area on the left (U-shaped area) and plot if needed.
-CHM <- DSM - DTM1 - 40.68
+# Compute the CHM substracting also 50, which is the difference height between the DSM and the DTM
+# in the area on the left side of the Speulderbos(U-shaped area) and plot if needed.
+CHM <- DSM - DTM1 - 50
 # plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 
-#Remove NA values
+# Remove values lower than 0 and NA values
 CHM[is.na(CHM)] <- 0
+CHM[CHM<0] <- 0
 
 # Use the focal statistics to smooth the CHM
 CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
@@ -109,9 +109,9 @@ crownsPoly$DBH <- dbh(H=crownsPoly$height, CA = crownsPoly$crownDiameter, biome=
 crownsPoly$standing_volume <- ((0.049)*((crownsPoly$DBH*100)^1.78189)*(crownsPoly$height)^1.08345)/1000
 hist(crownsPoly$standing_volume)
 
-# Save the results to a csv file.
+# Save the results to a CSV file
 dataset <- as.data.frame(crownsPoly)
-write.csv(dataset,"Data/photogrammetry_beech.csv", row.names = TRUE)
+write.csv(dataset,"Data/pr02_UAV_RGB_beech.csv", row.names = TRUE)
 
 # Compute the total tree volume in m^3
 totalVolume <- sum(as.matrix(crownsPoly$standing_volume))
@@ -123,8 +123,8 @@ m3ha
 ##### VALIDATION ####
 
 # Read the excels generated above and in the TLS scripts
-TLS_dataset <- read.csv("Data/TLS_beech.csv", header=TRUE, sep = ",")
-UAV_LS_dataset <- read.csv("Data/photogrammetry_beech.csv", header=TRUE, sep = ",")
+TLS_dataset <- read.csv("Data/pr01_TLS_beech_valid.csv", header=TRUE, sep = ",")
+UAV_LS_dataset <- read.csv("Data/pr02_UAV_RGB_beech.csv", header=TRUE, sep = ",")
 
 # Compute some statistics of both datasets
 trees_UAV <- nrow(UAV_LS_dataset)
@@ -149,13 +149,18 @@ t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_LS_dataset$standing_vol
                         paired = FALSE, alternative = "two.sided")
 
 
-validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" = c(trees_UAV, trees_TLS), 
-                                 "Trees per ha" = c(trees_ha_UAV, trees_ha_TLS), "Mean height (m)" = c(mean_height_UAV, mean_height_TLS),
-                                 "Mean DBH (m)" = c(mean_DBH_UAV, mean_DBH_TLS), "t-test DBH" = t_test_DBH$p.value,
-                                 "CI DBH" =t_test_DBH$conf.int,"St error DBH" = t_test_DBH$stderr,
-                                 "Mean volume (m3)" = c(mean_volume_UAV, mean_volume_TLS),"t-test volume" = t_test_volume$p.value,
-                                 "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m3 per ha" = c(m3ha, m3ha_TLS))
+validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number_of_trees" = c(trees_UAV, trees_TLS), 
+                                 "Trees_per_ha" = c(trees_ha_UAV, trees_ha_TLS), "Mean_height_m" = c(mean_height_UAV, mean_height_TLS),
+                                 "Mean_DBH_m" = c(mean_DBH_UAV, mean_DBH_TLS),
+                                 "Lower_limit_CI_DBH" = c(t_test_DBH$conf.int[1]+mean_DBH_UAV,t_test_DBH$conf.int[1]+mean_DBH_TLS),
+                                 "Upper_limit_CI_DBH" = c(t_test_DBH$conf.int[2]+mean_DBH_UAV,t_test_DBH$conf.int[2]+mean_DBH_TLS),
+                                 "Mean_volume_m3" = c(mean_volume_UAV, mean_volume_TLS),
+                                 "Lower_limit_CI_Volume" = c(t_test_volume$conf.int[1]+mean_volume_UAV,t_test_volume$conf.int[1]+mean_volume_TLS),
+                                 "Upper_limit_CI_Volume" = c(t_test_volume$conf.int[2]+mean_volume_UAV,t_test_volume$conf.int[2]+mean_volume_TLS),
+                                 "m3_per_ha" = c(m3ha, m3ha_TLS))
 
+validation_results
 
-# Export the results in an excel
+# Export the results as a CSV file
 write.table(validation_results, "Data/validation_results_RGB_beech.csv", row.names = TRUE)
+
