@@ -24,17 +24,17 @@ library(Metrics)
 readLAS<-lidR::readLAS
 
 #Setting working directory
-setwd("../ACT_Forest_Inventory")
+setwd("~/ACT/ACT_Forest_Inventory")
 
 #### CHM COMPUTATION ####
 set.seed(2020)
 
 # Load and read the AHN3 file
-AHN3_clip <- "Data/AHN3.laz"
+AHN3_clip <- "Data/ps02_AHN3.laz"
 AHN3 <- readLAS(AHN3_clip)
 
 # Load and clip the Laz file
-lasfile <- "Data/UAV_withGround.laz"
+lasfile <- "Data/ps02_UAV_LS.laz"
 douglasLas <- readLAS(lasfile)
 x <- c(176036, 176064, 176090, 176109,  176060, 176052)
 y <- c(473695, 473725, 473723, 473679,  473657, 473657)
@@ -85,11 +85,11 @@ trees <- lastrees(vegpoints, dalponte2016(chm = CHM, treetops = ttops, ID = 'tre
 #plot(trees, color="treeID")
 
 # Extract every tree into a separate .laz file
-dir.create( "Data/extracted_laz_fir")
+dir.create( "Data/pr02_extracted_laz_fir")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("Data/extracted_laz_fir/tree", i, ".laz"))}
+  writeLAS(tree, paste("Data/pr02_extracted_laz_fir/tree", i, ".laz"))}
 
 
 #### DBH PREDICTION ####
@@ -126,7 +126,7 @@ totalArea <- raster::area(AHN3) - emptyArea
 m3ha <- totalVolume/(totalArea/10000) 
 m3ha
 
-write.csv(full_dataset,"Data/UAV-LS-results_fir.csv", row.names = TRUE)
+write.csv(full_dataset,"Data/pr02_UAV_LS_fir.csv", row.names = TRUE)
 
 #### VALIDATION ####
 
@@ -135,8 +135,8 @@ MSE <- mean(model$mse[1:500])
 plot(model,  main="MSE of a RF model")
 
 # Read the excels generated above and in the TLS scripts
-TLS_dataset <- read.csv("Data/TLS_fir.csv", header=TRUE, sep = ",")
-UAV_dataset <- read.csv("Data/UAV-LS-results_fir.csv", header=TRUE, sep = ",")
+TLS_dataset <- read.csv("Data/pr01_TLS_beech_valid.csv", header=TRUE, sep = ",")
+UAV_dataset <- read.csv("Data/pr02_UAV_LS_fir.csv", header=TRUE, sep = ",")
 
 # Compute some statistics of both datasets
 trees_UAV <- nrow(UAV_dataset)
@@ -173,7 +173,7 @@ rmse(TLS_dataset$DBH, UAV_dataset$DBH)
 rmse(TLS_dataset$standing_volume, UAV_dataset$standing_volume)
 
 # Export the results in an excel
-write.table(validation_results, "Data/validation_results_UAV-LS_fir.csv", row.names = TRUE)
+write.table(validation_results, "Data/pr02_UAV_LS_fir_valid.csv", row.names = TRUE)
 
 
 

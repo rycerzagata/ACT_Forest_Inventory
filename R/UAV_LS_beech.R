@@ -88,11 +88,11 @@ trees <- lastrees(vegpoints, dalponte2016(chm = CHM, treetops = ttops, ID = 'tre
 #plot(trees, color="treeID")
 
 # Extract every tree into a separate .laz file
-dir.create( "Data/extracted_laz_beech")
+dir.create( "Data/pr02_extracted_laz_beech")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("Data/extracted_laz_beech/tree", i, ".laz"))}
+  writeLAS(tree, paste("Data/pr02_extracted_laz_beech/tree", i, ".laz"))}
 
 
 #### DBH PREDICTION ####
