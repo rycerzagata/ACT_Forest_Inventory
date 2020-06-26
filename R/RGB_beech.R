@@ -6,7 +6,6 @@ Description: This script can be used to compute the standing volume for beech fr
 At the end of the script some validation with TLS data is performed. 
 
 """
-start_time <- Sys.time()
 
 # Loading the required libraries
 library(lidR)
@@ -16,6 +15,7 @@ library(rgl)
 library(tiff)
 library(itcSegment)
 library(ForestTools)
+library(colorRamps)
 
 readLAS<-lidR::readLAS
 
