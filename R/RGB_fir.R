@@ -20,7 +20,7 @@ library(colorRamps)
 readLAS<-lidR::readLAS
 
 ## Setting working directory
-setwd("../ACT_Forest_Inventory")
+setwd("~/ACT/ACT_Forest_Inventory")
 
 #### CHM COMPUTATION ####
 set.seed(2020)
@@ -56,14 +56,14 @@ DSM <- resample(DSM_proj, DTM1, method = "bilinear")
 # in the area on the left side of the Speulderbos (U-shaped area) and plot if needed (98.8 - 48.8).
 CHM <- DSM - DTM1 - 50
 # plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
-summary(CHM)
+
 # Remove values lower than 0 and NA values
 CHM[is.na(CHM)] <- 0
 CHM[CHM<0] <- 0
 
 # Use the focal statistics to smooth the CHM
 CHM_smooth <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
-plot(CHM_smooth)
+plot(CHM_smooth,  main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 
 #### CHM DERIVATES COMPUTATION ####
 # Use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
