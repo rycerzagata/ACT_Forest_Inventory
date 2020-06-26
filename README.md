@@ -9,13 +9,13 @@
 
 ## Input data for Speulderbos area
 Explanation of abbreviations: ps - project source, valid - validation dataset, ps01 - the project source for first stage of the project - data preparation, ps02 - the project source for the second stage of the project - volume estimation.  
-1. ps01_TLS_beech.laz, ps01_TLS_fir.laz  
+1. ***ps01_TLS_beech.laz, ps01_TLS_fir.laz***   
 TLS point cloud datasets, note that for fir the dataset is divided into a couple of files for the purpose of computing limitations so the scripts should be run for each file.  
-2. ps02_AHN3.laz  
+2. ***ps02_AHN3.laz***  
 AHN3 puntenwolk (kaartblad 32fn2). The downloaded dataset is cropped to the extent of the study area (175981, 473657, 176265, 473782) to reduce its size (from 4 GB to 4,6 MB). Source: http://esrinlcontent.maps.arcgis.com/apps/Embed/index.html?appid=a3dfa5a818174aa787392e461c80f781 
-3. ps02_UAV_LS.laz  
+3. ***ps02_UAV_LS.laz***  
 UAV LS point cloud dataset clipped to the Speulderbos study site (175981, 473657, 176265, 473782).  
-4. ps02_UAV_RGB.tif
+4. ***ps02_UAV_RGB.tif***  
 Digital Surface Model created from photogrammetry data cropped to the study area (175981, 473657, 176265, 473782).  
 
 ## Instructions  
