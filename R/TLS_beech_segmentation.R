@@ -3,6 +3,7 @@ ACT group 10
 Remote Sensing and GIS Integration 2020
 Title: Forest Inventory through UAV based remote sensing
 Description: This script is made in order to create tree segmentation fitting using DALPONTE APPROACH.
+The script should be run for each LAZ tile in the zip file.
 """
 
 # Loading the required libraries
@@ -43,9 +44,15 @@ CHM <- focal(CHM,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
 
 #### TREE SEGMENTATION - DALPONTE APPROACH ####
 
+# Treetops detection using an algorithm based on a local maximum filter. 
+# The function can be point cloud based but due to long processing time we use CHM.
 ttops <- tree_detection(CHM, lmf(4, 2))
+
+# Normalize point cloud
 nlas <- lasnormalize(beechLas, DTM)
-Vegpoints_norm <- nlas %>% lasfilter(Classification==1) 
+
+# Individual tree segmentation based on the Dalponte and Coomes (2016) algorithm.
+# The returned point cloud has a new extra byte attribute named treeID.
 trees <- lastrees(nlas, dalponte2016(CHM, ttops))
 plot(trees, color="treeID") 
 

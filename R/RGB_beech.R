@@ -70,7 +70,7 @@ plot(CHM_smooth)
 #### CHM DERIVATES COMPUTATION ####
 
 # Use the Variable Window Filter (VWF) to detect dominant tree tops. We use a linear function used in 
-# forestry and set the minimum height of trees at 10, but those variables can be modified. 
+# forestry and set the minimum height of trees at 20, but those variables can be modified. 
 # After this we plot it to check how the tree tops look like. 
 lin <- function(x) { x * 0.01 + 0.1 }
 treetops <- vwf(CHM = CHM_smooth, winFun = lin, minHeight = 20)
