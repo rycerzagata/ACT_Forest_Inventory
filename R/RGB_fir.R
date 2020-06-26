@@ -113,7 +113,7 @@ m3ha
 
 # Read the excels generated above and in the TLS scripts
 TLS_dataset <- read.csv("Data/pr01_TLS_fir_valid.csv", header=TRUE, sep = ",")
-UAV_LS_dataset <- read.csv("Data/pr02_UAV_RGB_fir.csv", header=TRUE, sep = ",")
+UAV_dataset <- read.csv("Data/pr02_UAV_RGB_fir.csv", header=TRUE, sep = ",")
 
 
 # Compute some statistics of both datasets
