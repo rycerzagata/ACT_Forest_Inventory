@@ -167,5 +167,5 @@ rmse(TLS_dataset$DBH, UAV_dataset$DBH)
 rmse(TLS_dataset$standing_volume, UAV_dataset$standing_volume)
 
 # Export the results as a CSV file
-write.table(validation_results, "Data/validation_results_RGB_beech.csv", row.names = TRUE)
+write.table(validation_results, "Data/pr02_RGB_beech_valid.csv", row.names = TRUE)
 
