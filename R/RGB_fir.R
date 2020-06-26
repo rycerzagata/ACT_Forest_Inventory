@@ -112,13 +112,9 @@ m3ha
 # VALIDATION
 
 # Read the excels generated above and in the TLS scripts
-<<<<<<< HEAD
 TLS_dataset <- read.csv("Data/pr01_TLS_fir_valid.csv", header=TRUE, sep = ",")
 UAV_LS_dataset <- read.csv("Data/pr02_UAV_RGB_fir.csv", header=TRUE, sep = ",")
-=======
-TLS_dataset <- read.csv("Data/TLS_fir.csv", header=TRUE, sep = ",")
-UAV_dataset <- read.csv("Data/photogrammetry_fir.csv", header=TRUE, sep = ",")
->>>>>>> 2606d65ead2405cdd1ffc3990ef24cf26b2d8a91
+
 
 # Compute some statistics of both datasets
 trees_UAV <- nrow(UAV_dataset)
@@ -143,12 +139,15 @@ t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_dataset$standing_volume
                         paired = FALSE, alternative = "two.sided")
 
 
-validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" = c(trees_UAV, trees_TLS), 
-                                 "Trees per ha" = c(trees_ha_UAV, trees_ha_TLS), "Mean height (m)" = c(mean_height_UAV, mean_height_TLS),
-                                 "Mean DBH (m)" = c(mean_DBH_UAV, mean_DBH_TLS), "t-test DBH" = t_test_DBH$p.value,
-                                 "CI DBH" =t_test_DBH$conf.int,"St error DBH" = t_test_DBH$stderr,
-                                 "Mean volume (m3)" = c(mean_volume_UAV, mean_volume_TLS),"t-test volume" = t_test_volume$p.value,
-                                 "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m3 per ha" = c(m3ha, m3ha_TLS))
+validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number_of_trees" = c(trees_UAV, trees_TLS), 
+                                 "Trees_per_ha" = c(trees_ha_UAV, trees_ha_TLS), "Mean_height_m" = c(mean_height_UAV, mean_height_TLS),
+                                 "Mean_DBH_m" = c(mean_DBH_UAV, mean_DBH_TLS),
+                                 "Lower_limit_CI_DBH" = c(t_test_DBH$conf.int[1]+mean_DBH_UAV,t_test_DBH$conf.int[1]+mean_DBH_TLS),
+                                 "Upper_limit_CI_DBH" = c(t_test_DBH$conf.int[2]+mean_DBH_UAV,t_test_DBH$conf.int[2]+mean_DBH_TLS),
+                                 "Mean_volume_m3" = c(mean_volume_UAV, mean_volume_TLS),
+                                 "Lower_limit_CI_Volume" = c(t_test_volume$conf.int[1]+mean_volume_UAV,t_test_volume$conf.int[1]+mean_volume_TLS),
+                                 "Upper_limit_CI_Volume" = c(t_test_volume$conf.int[2]+mean_volume_UAV,t_test_volume$conf.int[2]+mean_volume_TLS),
+                                 "m3_per_ha" = c(m3ha, m3ha_TLS))
 
 # Compute the RMSE of DBH and standing volume
 rmse(TLS_dataset$DBH, UAV_dataset$DBH)
