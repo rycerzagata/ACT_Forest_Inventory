@@ -4,7 +4,6 @@ Remote Sensing and GIS Integration 2020
 Title: Forest Inventory through UAV based remote sensing
 Description: This script can be used to compute the standing volume for fir from AHN3 and UAV RGB data.
 At the end of the script some validation with TLS data is performed. 
-
 """
 
 # Loading the required libraries
@@ -15,6 +14,7 @@ library(rgl)
 library(tiff)
 library(itcSegment)
 library(ForestTools)
+library(Metrics)
 
 readLAS<-lidR::readLAS
 
@@ -112,29 +112,34 @@ m3ha
 # VALIDATION
 
 # Read the excels generated above and in the TLS scripts
+<<<<<<< HEAD
 TLS_dataset <- read.csv("Data/pr01_TLS_fir_valid.csv", header=TRUE, sep = ",")
 UAV_LS_dataset <- read.csv("Data/pr02_UAV_RGB_fir.csv", header=TRUE, sep = ",")
+=======
+TLS_dataset <- read.csv("Data/TLS_fir.csv", header=TRUE, sep = ",")
+UAV_dataset <- read.csv("Data/photogrammetry_fir.csv", header=TRUE, sep = ",")
+>>>>>>> 2606d65ead2405cdd1ffc3990ef24cf26b2d8a91
 
 # Compute some statistics of both datasets
-trees_UAV <- nrow(UAV_LS_dataset)
+trees_UAV <- nrow(UAV_dataset)
 trees_TLS <- nrow(TLS_dataset)
 trees_ha_UAV <- trees_UAV/(totalArea/10000)
 trees_ha_TLS <- trees_TLS/(totalArea/10000)
-mean_height_UAV <- mean(UAV_LS_dataset$height)
+mean_height_UAV <- mean(UAV_dataset$height)
 mean_height_TLS <- mean(TLS_dataset$height)
-mean_DBH_UAV <- mean(UAV_LS_dataset$DBH)
+mean_DBH_UAV <- mean(UAV_dataset$DBH)
 mean_DBH_TLS <- mean(TLS_dataset$DBH)
 m3ha_TLS <- sum(TLS_dataset$standing_volume)/(totalArea/10000)
 
 # Compare if there is a significant difference between the DBH from TLS and UAV-LS
-t_test_DBH <- t.test(TLS_dataset$DBH, UAV_LS_dataset$DBH, 
+t_test_DBH <- t.test(TLS_dataset$DBH, UAV_dataset$DBH, 
                      paired = FALSE, alternative = "two.sided")
 
-mean_volume_UAV <- mean(UAV_LS_dataset$standing_volume)
+mean_volume_UAV <- mean(UAV_dataset$standing_volume)
 mean_volume_TLS <- mean(TLS_dataset$standing_volume)
 
 # Compare if there is a significant difference between the standing volume from TLS and UAV-LS
-t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_LS_dataset$standing_volume, 
+t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_dataset$standing_volume, 
                         paired = FALSE, alternative = "two.sided")
 
 
@@ -145,6 +150,9 @@ validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" 
                                  "Mean volume (m3)" = c(mean_volume_UAV, mean_volume_TLS),"t-test volume" = t_test_volume$p.value,
                                  "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m3 per ha" = c(m3ha, m3ha_TLS))
 
+# Compute the RMSE of DBH and standing volume
+rmse(TLS_dataset$DBH, UAV_dataset$DBH)
+rmse(TLS_dataset$standing_volume, UAV_dataset$standing_volume)
 
 validation_results
 
