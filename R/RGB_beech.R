@@ -161,6 +161,10 @@ validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number_of_trees" 
 
 validation_results
 
+# Compute the RMSE of DBH and standing volume
+rmse(TLS_dataset$DBH, UAV_dataset$DBH)
+rmse(TLS_dataset$standing_volume, UAV_dataset$standing_volume)
+
 # Export the results as a CSV file
 write.table(validation_results, "Data/validation_results_RGB_beech.csv", row.names = TRUE)
 
