@@ -12,7 +12,6 @@ library(raster)
 library(sp)
 library(rgl)
 library(TreeLS)
-library(EBImage)
 library(rLiDAR)
 
 

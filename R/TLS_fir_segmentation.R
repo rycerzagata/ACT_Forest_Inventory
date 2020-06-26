@@ -7,28 +7,26 @@ are computed. The last part of the script is tree segmentation using Dalponte ap
 """
 
 # Loading the required libraries
+library(lidR)
 library(raster)
 library(sp)
 library(rgl)
-library(lidR)
-library(colorRamps)
-library(rlas)
-library(ForestTools)
-library(itcSegment)
 library(TreeLS)
+library(rLiDAR)
+
 
 ## Setting working directory
-setwd("../ACT_Forest_Inventory")
+setwd("~/ACT/ACT_Forest_Inventory")
 
 ## Douglas Fir species has a large size so it must be divided into 6 files
 ## create folder and unzip data
-zipfile <- 'Data/TLS_douglas_fir.zip'
-outdir <- 'Data/TLS_douglas_fir'
+zipfile <- 'Data/ps01_TLS_douglas_fir.zip'
+outdir <- 'Data/ps01_TLS_douglas_fir'
 unzip(zipfile,exdir=outdir)
 
 ## load each data to process until segmentation
 ## read laz file of TLS data
-tls_file <- "Data/TLS_douglas_fir/tls_dfir_ground_cliped_agata_634_159.laz"
+tls_file <- "Data/ps01_TLS_douglas_fir/tls_dfir_ground_cliped_agata_634_159.laz"
 douglas <- readTLS(tls_file)
 
 # Computing the DSM with the TLS dataset
@@ -45,27 +43,29 @@ chm[is.na(chm)] <- 0
 # Using focal statistics to smooth the CHM
 chm <- focal(chm,w=matrix(1/9, nc=3, nr=3), na.rm=TRUE)
 
-#################################################
+
 #### TREE SEGMENTATION - DALPONTE APPROACH ####
+
+# Treetops detection using an algorithm based on a local maximum filter. 
+# The function can be point cloud based but due to long processing time we use CHM.
 ttops <- tree_detection(chm, lmf(4, 2))
-crowns <- mcws(treetops = ttops, CHM=chm, minHeight = 15, verbose=FALSE)
-crownsPoly <- mcws(treetops = ttops, CHM=chm, minHeight = 8, verbose=FALSE, format="polygons")
 
 # Normalize the point cloud using DTM
 nlas <- lasnormalize(douglas, DTM)
 
-# Tree segmentation
+# Individual tree segmentation based on the Dalponte and Coomes (2016) algorithm.
+# The returned point cloud has a new extra byte attribute named treeID.
 trees <- lastrees(nlas, dalponte2016(chm, ttops))
 plot(trees, color="treeID") 
 
 # Extract every tree into a separate .laz file
 # Give a different folder name for each dataset
-dir.create( "Data/extracted_laz_tls_fir")
-dir.create( "Data/extracted_laz_tls_fir/clipped_634_159")
+dir.create( "Data/pr01_extracted_laz_TLS_fir")
+dir.create( "Data/pr01_extracted_laz_TLS_fir/clipped_634_159")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
-  writeLAS(tree, paste("Data/extracted_laz_tls_fir/clipped_634_159/tree", i, ".laz"))}
+  writeLAS(tree, paste("Data/pr01_extracted_laz_TLS_fir/clipped_634_159/tree", i, ".laz"))}
 
 
 

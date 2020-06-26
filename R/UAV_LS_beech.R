@@ -17,6 +17,9 @@ library(rlas)
 library(ForestTools)
 library(TreeLS)
 library(randomForest)
+library(EBImage)
+library(Metrics)
+library(raster)
 
 readLAS<-lidR::readLAS
 
@@ -136,30 +139,31 @@ write.csv(full_dataset,"Data/pr02_UAV_LS_beech.csv", row.names = TRUE)
 MSE <- mean(model$mse[1:500])
 plot(model,  main="MSE of a RF model")
 
-# Read the excels generated above and in the TLS scripts
+# Read the CSVs generated above and in the TLS scripts
 TLS_dataset <- read.csv("Data/pr01_TLS_beech_valid.csv", header=TRUE, sep = ",")
-UAV_LS_dataset <- read.csv("Data/pr02_UAV_LS_beech.csv", header=TRUE, sep = ",")
+UAV_dataset <- read.csv("Data/pr02_UAV_LS_beech.csv", header=TRUE, sep = ",")
+
 
 # Compute some statistics of both datasets
-trees_UAV <- nrow(UAV_LS_dataset)
+trees_UAV <- nrow(UAV_dataset)
 trees_TLS <- nrow(TLS_dataset)
 trees_ha_UAV <- trees_UAV/(totalArea/10000)
 trees_ha_TLS <- trees_TLS/(totalArea/10000)
-mean_height_UAV <- mean(UAV_LS_dataset$height)
+mean_height_UAV <- mean(UAV_dataset$height)
 mean_height_TLS <- mean(TLS_dataset$height)
-mean_DBH_UAV <- mean(UAV_LS_dataset$DBH)
+mean_DBH_UAV <- mean(UAV_dataset$DBH)
 mean_DBH_TLS <- mean(TLS_dataset$DBH)
 m3ha_TLS <- sum(TLS_dataset$standing_volume)/(totalArea/10000)
 
 # Compare if there is a significant difference between the DBH from TLS and UAV-LS
-t_test_DBH <- t.test(TLS_dataset$DBH, UAV_LS_dataset$DBH, 
+t_test_DBH <- t.test(TLS_dataset$DBH, UAV_dataset$DBH, 
                                    paired = FALSE, alternative = "two.sided")
 
-mean_volume_UAV <- mean(UAV_LS_dataset$standing_volume)
+mean_volume_UAV <- mean(UAV_dataset$standing_volume)
 mean_volume_TLS <- mean(TLS_dataset$standing_volume)
 
 # Compare if there is a significant difference between the standing volume from TLS and UAV-LS
-t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_LS_dataset$standing_volume, 
+t_test_volume <- t.test(TLS_dataset$standing_volume, UAV_dataset$standing_volume, 
                                paired = FALSE, alternative = "two.sided")
 
 
@@ -170,6 +174,9 @@ validation_results <- data.frame("Dataset" = c("UAV", "TLS"), "Number of trees" 
                                  "Mean volume (m3)" = c(mean_volume_UAV, mean_volume_TLS),"t-test volume" = t_test_volume$p.value,
                                  "CI volume"=t_test_volume$conf.int,"St error volume" = t_test_volume$stderr, "m3 per ha" = c(m3ha, m3ha_TLS))
 
+# Compute the RMSE of DBH and standing volume
+rmse(TLS_dataset$DBH, UAV_dataset$DBH)
+rmse(TLS_dataset$standing_volume, UAV_dataset$standing_volume)
   
 # Export the results in an excel
 write.table(validation_results, "Data/pr02_UAV_LS_beech_valid.csv", row.names = TRUE)
