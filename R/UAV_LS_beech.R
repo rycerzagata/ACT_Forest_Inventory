@@ -20,6 +20,7 @@ library(randomForest)
 library(EBImage)
 library(Metrics)
 library(raster)
+library(colorRamps)
 
 readLAS<-lidR::readLAS
 
@@ -102,10 +103,10 @@ set.seed(2020)
 # using the software Cloud Compare. There are some rules for choosing the right trees:
 # no double trees on plot,the stem must be visible, no understory covering stems, returns distributed in cylindrical 
 # shapes, trees distributed across a wide range of DBH (5-50 cm) and geographically distributed throughout the area.
-sample_index <- c(1, 4, 6, 15, 20, 23, 24, 30, 33:35, 38, 41)
+sample_index <- c( 1, 4, 6, 8, 10, 15, 18, 20, 23, 25, 30, 38 )
 training <- as.data.frame(crownsPoly[sample_index,])
 names(training) <- c("treeID", "height", "crownArea", "crownDiameter")
-training$DBH <- c(0.594, 0.43, 0.4, 0.49, 0.438, 0.674, 0.53, 0.327, 0.3215,0.3055, 0.301, 0.293, 0.322)
+training$DBH <- c( 0.61, 0.55, 0.4, 0.57, 0.74, 0.53, 0.54, 0.56, 0.7, 0.89, 0.32, 0.56 )
 
 # Create the test dataset 
 test <- as.data.frame(crownsPoly[-sample_index,])
