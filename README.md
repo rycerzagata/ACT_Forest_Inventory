@@ -10,7 +10,7 @@
 
 ## Input data for Speulderbos area
 Explanation of abbreviations: ps - project source, valid - validation dataset, ps01 - the project source for first stage of the project - data preparation, ps02 - the project source for the second stage of the project - volume estimation.  
-The data shold be downloaded to a local device and stored in folder *ACT_Forest_Inventory*, subfolder *Data*.The paths in scripts are adjusted to file names presented below. The scripts should automatically recognise the paths after setting up the correct working directory.
+The data should be downloaded to a local device and stored in a folder *ACT_Forest_Inventory*, subfolder *Data*.The paths in scripts are adjusted to file names presented below. The scripts should automatically recognize the paths after setting up the correct working directory.
 1. ***ps01_TLS_beech.laz, ps01_TLS_fir.laz***   
 TLS point cloud datasets, note that for fir the dataset is divided into a couple of files for the purpose of computing limitations so the scripts should be run for each file.  
 2. ***ps02_AHN3.laz***  
