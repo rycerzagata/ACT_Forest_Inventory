@@ -68,7 +68,7 @@ plot(ttops, col="black", pch = 20, cex=0.5, add=TRUE)
 
 # Crowns detection using MCWS function that implements the watershed algorithm to produce a map of crowns as polygons.. 
 # In this case, the argument minHeight refers to the lowest expected treetop.
-crownsPoly <- mcws(treetops = ttops, CHM=CHM, minHeight = 20, verbose=FALSE, format="polygons")
+crownsPoly <- mcws(treetops = ttops, CHM=CHM, minHeight = 23, verbose=FALSE, format="polygons")
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
@@ -135,7 +135,7 @@ MSE <- mean(model$mse[1:500])
 plot(model,  main="MSE of a RF model")
 
 # Read the excels generated above and in the TLS scripts
-TLS_dataset <- read.csv("Data/pr01_TLS_beech_valid.csv", header=TRUE, sep = ",")
+TLS_dataset <- read.csv("Data/pr01_TLS_fir_valid.csv", header=TRUE, sep = ",")
 UAV_dataset <- read.csv("Data/pr02_UAV_LS_fir.csv", header=TRUE, sep = ",")
 
 # Compute some statistics of both datasets
@@ -175,6 +175,7 @@ rmse(TLS_dataset$standing_volume, UAV_dataset$standing_volume)
 # Export the results in an excel
 write.table(validation_results, "Data/pr02_UAV_LS_fir_valid.csv", row.names = TRUE)
 
+validation_results
 
 
 
