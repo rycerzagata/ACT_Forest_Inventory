@@ -106,7 +106,7 @@ set.seed(2020)
 sample_index <- c( 1, 4, 6, 8, 10, 15, 18, 20, 23, 25, 30, 38 )
 training <- as.data.frame(crownsPoly[sample_index,])
 names(training) <- c("treeID", "height", "crownArea", "crownDiameter")
-training$DBH <- c( 0.61, 0.55, 0.4, 0.57, 0.74, 0.53, 0.54, 0.56, 0.7, 0.89, 0.32, 0.56 )
+training$DBH <- c( 0.61, 0.55, 0.4, 0.57, 0.74, 0.48, 0.54, 0.56, 0.7, 0.89, 0.32, 0.56 )
 
 # Create the test dataset 
 test <- as.data.frame(crownsPoly[-sample_index,])
