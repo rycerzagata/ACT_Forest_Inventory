@@ -12,7 +12,7 @@
 Explanation of abbreviations: ps - project source, valid - validation dataset, ps01 - the project source for first stage of the project - data preparation, ps02 - the project source for the second stage of the project - volume estimation.  
 The data should be downloaded to a local device and stored in a folder *ACT_Forest_Inventory*, subfolder *Data*.The paths in scripts are adjusted to file names presented below. The scripts should automatically recognize the paths after setting up the correct working directory.
 1. ***ps01_TLS_beech.laz, ps01_TLS_fir.laz***   
-TLS point cloud datasets, note that for fir the dataset is divided into a couple of files for the purpose of computing limitations so the scripts should be run for each file.  
+TLS point cloud datasets, note that for fir the dataset might be divided into a couple of files for the purpose of computing limitations so the scripts should be run for each file.  
 2. ***ps02_AHN3.laz***  
 AHN3 puntenwolk (kaartblad 32fn2). The downloaded dataset is cropped to the extent of the study area (175981, 473657, 176265, 473782) to reduce its size (from 4 GB to 4,6 MB). Source: http://esrinlcontent.maps.arcgis.com/apps/Embed/index.html?appid=a3dfa5a818174aa787392e461c80f781 
 3. ***ps02_UAV_LS.laz***  
