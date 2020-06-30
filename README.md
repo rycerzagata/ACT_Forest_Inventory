@@ -9,8 +9,8 @@
 6. Validation of volume estimations from both UAV-LS and UAV RGB using TLS data
 
 ## Input data for Speulderbos area
-Explanation of abbreviations: ps - project source, valid - validation dataset, ps01 - the project source for first stage of the project - data preparation, ps02 - the project source for the second stage of the project - volume estimation.  
-The data should be downloaded to a local device and stored in a folder *ACT_Forest_Inventory*, subfolder *Data*.The paths in scripts are adjusted to file names presented below. The scripts should automatically recognize the paths after setting up the correct working directory.
+Explanation of abbreviations: ps - project source, valid - validation dataset, ps01 - the project source for first stage of the project - data preparation, ps02 - the project source for the second stage of the project - volume estimation.
+The data should be downloaded to a local device and stored in a folder *ACT_Forest_Inventory*, subfolder *Data*.The paths in scripts are adjusted to file names presented below. The scripts should automatically recognize the paths after setting up the correct working directory. Link to the data: https://filesender.surf.nl/?s=download&token=e30fbda8-bd14-4df9-990b-7d63c66e99c8
 1. ***ps01_TLS_beech.laz, ps01_TLS_fir.laz***   
 TLS point cloud datasets, note that for fir the dataset might be divided into a couple of files for the purpose of computing limitations so the scripts should be run for each file.  
 2. ***ps02_AHN3.laz***  
