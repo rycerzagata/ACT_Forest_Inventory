@@ -4,7 +4,6 @@ Remote Sensing and GIS Integration 2020
 Title: Forest Inventory through UAV based remote sensing
 Description: This script can be used to compute the standing volume for Douglas fir from AHN3 and UAV-LS data.
 At the end of the script some validation with TLS data is performed. 
-
 """
 
 # Loading the required libraries
@@ -68,7 +67,7 @@ plot(ttops, col="black", pch = 20, cex=0.5, add=TRUE)
 
 # Crowns detection using MCWS function that implements the watershed algorithm to produce a map of crowns as polygons.. 
 # In this case, the argument minHeight refers to the lowest expected treetop.
-crownsPoly <- mcws(treetops = ttops, CHM=CHM, minHeight = 23, verbose=FALSE, format="polygons")
+crownsPoly <- mcws(treetops = ttops, CHM=CHM, minHeight = 20, verbose=FALSE, format="polygons")
 plot(CHM, main="CHM", col=matlab.like2(50), xaxt="n", yaxt="n")
 plot(crownsPoly, border="black", lwd=0.5, add=TRUE)
 
@@ -178,6 +177,3 @@ rmse(TLS_dataset$standing_volume, UAV_dataset$standing_volume)
 write.table(validation_results, "Data/pr02_UAV_LS_fir_valid.csv", row.names = TRUE)
 
 validation_results
-
-
-
