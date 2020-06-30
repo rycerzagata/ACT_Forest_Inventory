@@ -56,13 +56,12 @@ trees <- lastrees(nlas, dalponte2016(CHM, ttops))
 plot(trees, color="treeID") 
 
 # We extract every tree into a different .laz file
+# In case of memory error, use rm("variable) to remove unused variables
+# Also, if tree segmentation stopped by memory error, use rm(tree) and replace the "1" in "i" in 1:max
+# to the last number of tree it stopped at.
+# The rerun the forloop
 dir.create( "Data/pr01_extracted_laz_TLS_beech")
 for (i in 1:max(trees@data$treeID, na.rm=TRUE)){
   print(i)
   tree <- trees %>% lasfilter(treeID==i, Classification==1)
   writeLAS(tree, paste("Data/pr01_extracted_laz_TLS_beech/tree", i, ".laz"))}
-
-
-
-
-
