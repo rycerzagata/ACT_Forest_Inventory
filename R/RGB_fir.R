@@ -106,7 +106,7 @@ write.csv(dataset,"Data/pr02_UAV_RGB_fir.csv", row.names = TRUE)
 # Compute the total tree volume in m^3
 totalVolume <- sum(as.matrix(crownsPoly$standing_volume))
 emptyArea <- 240                                       # area of empty spaces in the forest measured with polygons in ArcgIS/QGIS
-totalArea <- raster::area(AHN3) - emptyArea      # area of forest
+totalArea <- raster::area(AHN3) - emptyArea            # area of forest
 m3ha <- totalVolume/(totalArea/10000)                  # total tree volume in m^3 per hectare
 m3ha
 
