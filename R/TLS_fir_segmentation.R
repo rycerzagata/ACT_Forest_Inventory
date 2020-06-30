@@ -26,7 +26,7 @@ unzip(zipfile,exdir=outdir)
 
 ## load each data to process until segmentation
 ## read laz file of TLS data
-tls_file <- "Data/ps01_TLS_douglas_fir/tls_dfir_ground_cliped_agata_634_159.laz"
+tls_file <- "Data/ps01_TLS_douglas_fir/tls_fir_634_159.laz"
 douglas <- readTLS(tls_file)
 
 # Computing the DSM with the TLS dataset
@@ -56,7 +56,7 @@ nlas <- lasnormalize(douglas, DTM)
 # Individual tree segmentation based on the Dalponte and Coomes (2016) algorithm.
 # The returned point cloud has a new extra byte attribute named treeID.
 trees <- lastrees(nlas, dalponte2016(chm, ttops))
-plot(trees, color="treeID") 
+#plot(trees, color="treeID") 
 
 # Extract every tree into a separate .laz file
 # Give a different folder name for each dataset

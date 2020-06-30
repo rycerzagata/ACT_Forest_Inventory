@@ -53,7 +53,7 @@ nlas <- lasnormalize(beechLas, DTM)
 # Individual tree segmentation based on the Dalponte and Coomes (2016) algorithm.
 # The returned point cloud has a new extra byte attribute named treeID.
 trees <- lastrees(nlas, dalponte2016(CHM, ttops))
-plot(trees, color="treeID") 
+#plot(trees, color="treeID") 
 
 # We extract every tree into a different .laz file
 # In case of memory error, use rm("variable) to remove unused variables
